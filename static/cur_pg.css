@@ -1,0 +1,81 @@
+body {
+    background-color: #fdefdd;
+}
+
+.cur_headrNoIMG {
+    background-image: url(assets/images/BgImageH.png);
+    background-position: center;
+    height: 150px;
+    width: 100%;
+    position: absolute;
+    filter: brightness(0.75);
+    z-index: -1;
+}
+
+.curHmain {
+    position: relative;
+}
+
+.curHmain .cursTl {
+    position: absolute;
+    left: 41%;
+    line-height: 150px;
+}
+
+.curHmain a {
+    margin-top: 8%;
+}
+
+.headerbar {
+    top: 100%;
+}
+
+.cur_headr {
+    background-image: url('assets/images/{{ curTtlIMG }}.png');
+    background-position: center;
+    height: 150px;
+    width: 100%;
+    position: absolute;
+    filter: brightness(0.75);
+    z-index: -1;
+}
+
+.crsCntntWrap {
+    background-color: white;
+    border: black solid;
+    margin: 0 auto;
+    width: 95%;
+    height: 1500px;
+    display: flexbox;
+}
+
+.crsCntntVid {
+    border: rgb(245, 4, 4) solid;
+    margin: 0px 5px;
+    width: 60%;
+    height: 400px;
+    float: left;
+}
+
+.crsCntntList {
+    border: rgb(94, 255, 0) solid;
+    margin: 0px 5px;
+    height: fit-content;
+    width: 20%;
+    scrollbar-width: 100%;
+    float: right;
+}
+
+.crsCntntList .list-group .list-group-item {
+    background-color: rgb(211, 228, 233);
+    color: inherit;
+    border-radius: 0%;
+}
+
+.mainCntList {
+    margin: 5px auto;
+}
+
+.crsListSubCnt {
+    background-color: inherit;
+}

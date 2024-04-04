@@ -1,0 +1,64 @@
+{% extends "baseLayout.html" %}
+
+{% block title %}
+    Página do Estudante
+{% endblock %}
+
+{% block head %}
+<link href="/static/curso_main.css" rel="stylesheet">
+{% endblock %}
+
+{% block headerbar%}
+<div class="hbar">
+    <ul class="list-group list-group-horizontal d-flex justify-content-center">
+        <a href="/usrMainPage" tabindex="1">
+            <li class="barO list-group-item rounded-0">Cursos</li>
+        </a>
+        <a href="/" tabindex="2">
+            <li class="barO list-group-item rounded-0">Professores</li>
+        </a>
+    </ul>
+</div>
+{% endblock %}
+
+{% block main %}
+    <div class="curso_showcase">
+    {% if curso is not none %}
+        {% for curso in cursos %}
+                    <a class="cursolinked" id="acurso"href="{{ url_for('cours_redir_pg', course=curso[0]) }}">
+                        <div class="curso">
+                            <div class="curso_image_hold">
+                                {% set image_path = url_for('static', filename='images/cursos/' ~ curso[1]|default('') ~ '.png') %}
+                                {% if image_path | find(curso[1]) != 1 %}
+                                    <img src="static/assets/images/cursos/{{ curso[1] }}.png" class="curso_image2">
+                                {% else %}
+                                    <img src="static/assets/images/BgImage.png" class="curso_image">
+                                {% endif %}
+                            </div>
+                            <div class="info_curso">
+                                <h3>{{ curso[1] }}</h3>
+                                <div class="curs_desc">{{ curso[2] }}</div>
+                                <div class="curs_price_tag">{{ curso[3] }}</div>
+                            </div>
+                        </div>
+                    </a>
+        {% endfor %}
+    {% endif %}
+    </div>
+    <script>
+        /*
+        function coursRdr(course) {
+            const data = {
+                course: course
+            }
+            console.log(data)
+            fetch('/coursePgRdr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data),
+            })  
+        }*/
+    </script>
+{% endblock %}

@@ -1,0 +1,44 @@
+#sbarAdmin 
+{
+    width: 280px; 
+    height: 100%; 
+    position: absolute;
+    background-color: crimson;
+    color: white;
+    text-decoration: none;
+    font-family: 'Montserrat';
+}
+
+#sbarAdmin a
+{
+    color: white;
+    text-decoration: none;
+}
+
+#crsPgTBL 
+{
+    table-layout: fixed;
+}
+
+#crsPgTBL td  
+{
+    vertical-align: middle;
+    width: 20%;
+}
+
+#usrCTBL
+{
+    text-align: start;
+    table-layout: auto;
+    font-size: 15px;
+}
+
+#usrCTBL .list-group-item
+{
+    right: 10%;
+    background: none;
+    color: black;
+    display: flex;
+    font-size: 13px;
+    text-indent: 5px;
+}

@@ -1,0 +1,9 @@
+*/__pycache__
+**/.reference
+**/.vscode
+**/flask_session
+**/node_modules
+**/DB SCHEMA.sql
+**/pythoneverywhere.txt
+**/medusrmain.sql
+**/mysql.log

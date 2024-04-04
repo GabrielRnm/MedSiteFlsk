@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+    <head>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1, width=device-width">
+
+        <!-- http://getbootstrap.com/docs/5.3/ -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        
+        <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+
+        <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+        <!-- icon med -->
+        <link href="/static/assets/images/medmentoryicon_icon.ico" rel="icon">
+
+        <link href="/static/styles.css" rel="stylesheet">
+        <link href="/static/admin.css" rel="stylesheet">
+
+        <title>ADMIN/Gerenciamento de Alunos</title>
+
+    </head>
+    <body>
+        <div class="header">
+            <a href="/" style="text-decoration: none;"><h1 class="h1 text-start" style="color: rgb(255, 230, 230);"><img class="smalltxtimg" src="/static/assets/images/medmentoryicon.jpg">MEDMENTORY</h1></a>
+            <ul class="logregoutbox list-group list-group-flush list-group-horizontal">
+                {% if session["usr_id"] %}
+                    <a href="/logout" style="text-decoration: none;"><li class="list-group-item">Sair</li></a>
+                    <a href="/usrMainPage" style="text-decoration: none;"><li class="list-group-item">Página do Estudante</li></a>
+                {% else %}
+                    <a href="/login" style="text-decoration: none;"><li class="list-group-item">Entrar</li></a>
+                    <a href="/register" style="text-decoration: none;"><li class="list-group-item">Cadastre-se</li></a>
+                {% endif %}
+                {% if session["isAdmin"] %}
+                    <a href="/adminMainPage" style="text-decoration: none;"><li class="list-group-item" id="admButton">ADMIN</li></a>
+                {% endif %}
+            </ul>
+            {% if session["isAdmin"] %}
+                <div class="Adminheader">ADMIN</div>
+            {% endif %}
+        </div>
+        <main class="container py-5 text-center">
+            <main class="mainwrapper">
+                ADMIN
+                <form action="/aUsrReg" method="post">
+                    <table class="table table-striped table-hover table-bordered" id="usrCTBL">
+                        <thead class="thead-dark">
+                            <td>#</td>
+                            <td>Nome Do Aluno</td>
+                            <td>Email</td>
+                            <td>Senha</td>
+                            <td>CPF</td>
+                            <td>Telefone</td>
+                            <td>Status</td>
+                            <td>Data da Inscrição</td>
+                            <td>Cursos</td>
+                            <td></td>
+                        </thead>
+                        <tbody id="checkthisonjs">
+                            {% for aluno in alunos %}
+                                <tr name="CourseRow">
+                                    <p name ="curcount" id="{{alunoC}}" style="visibility: hidden;"></p>
+                                    <td name="Auser_id">{{ aluno[0] }}</td>
+                                    <td name="Auser_name">{{ aluno[1] }}</td>
+                                    <td name="Auser_email">{{ aluno[2]}}</td>
+                                    <td name="Auser_pass">{{ aluno[3] }}</td>
+                                    <td name="Auser_CPF">{{ aluno[4] }}</td>
+                                    <td name="Auser_phone">{{aluno[5]}}</td>
+                                    <td name="Online_status">
+                                        {% if aluno[6] == 1 %}
+                                            Online
+                                        {% else %}
+                                            Offline
+                                        {% endif%}
+                                    </td>
+                                    <td name="Auser_reg_date">{{ aluno[7] }} {{ aluno[8] }}</td>
+                                    <td name="Ausr_cursos">
+                                        <ul class="list-group" style="overflow-y: scroll; height: 70px;" id="cursL{{ aluno[0] }}">
+                                            {% for cursosN in cursosN %}
+                                            {% set ns = namespace(found=false) %}
+                                                {% for varDCL in varDCC %}
+                                                    {% if (varDCL[0] == cursosN[1]) and (varDCL[1] == aluno[0]) and (ns.found != true) %}
+                                                        {% set ns.found = true %}
+                                                        {% break %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <li class="list-group-item">
+                                                    {#<p>{{ ns.found }}</p>#}
+                                                    {% if cursosN[0].split(' ')|length > 1 %}
+                                                        <input class="form-check-input" type="checkbox" id="{{ cursosN[1]}},{{aluno[0] }}" {% if ns.found %}checked{% endif %} style="height: 13px;"onclick="addAlunoCrs(this.id)">
+                                                        {{ cursosN[0][0] }}{{ cursosN[0][1] }}{{ cursosN[0][2] }}.{{ cursosN[0].split(' ')[1] }}
+                                                    {% else %}
+                                                        <input class="form-check-input" type="checkbox" id="{{ cursosN[1]}},{{aluno[0] }}" {% if ns.found %}checked{% endif %} style="height: 13px;"onclick="addAlunoCrs(this.id)">
+                                                        {{ cursosN[0] }}
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-warning" id="editCrs{{aluno[0]}}"onclick="editAluno({{ aluno[0] }})">Edit</button>
+                                        <button type="button" class="btn btn-danger" id="removeCourse" style="margin-right: -15px;"onclick="deleteAlunoPre({{ aluno[0]}})" >DELETE</button>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="btn btn-outline-danger" id="MS{{aluno[0]}}"onclick="multipleDEL({{ aluno[0] }})"></input>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="hbuttoncontainer">
+                        <button type="button" class="btn btn-outline-primary" style="padding: 3px 20px;" name="iaddaluno" onclick="NewAluno()">+</button>
+                    </div>
+                </form>
+            </main>
+        </main>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+
+            const cursosOG = document.getElementsByName("curcount");
+            let buttoncontainer = document.querySelector(".hbuttoncontainer");
+            var crsbtnadd = document.querySelector('button[name="iaddaluno"]');
+            var tempdbtn = document.querySelectorAll('button');
+
+            lastOG = cursosOG.length;
+            var globalAddCourses = 0;
+
+            function retrieveButtons() { // retrieves buttons might be used for more than just buttoncontainer
+                if (globalAddCourses === 0) {
+                    while (buttoncontainer.childElementCount > 1) {
+                        buttoncontainer.removeChild(buttoncontainer.lastChild);
+                    }
+                    for (var i = 0; i < tempdbtn.length; i++) {
+                        if (tempdbtn[i].innerHTML == "Edit") {
+                            tempdbtn[i].style.visibility = "visible";
+                        }
+                    }
+                }
+            }
+
+            function editAluno(id) { // edit course info and update mysql
+                //TODO
+                var c_id = document.getElementById("editCrs" + id);
+                
+                // console.log(tempdbtn[0]);
+                crsbtnadd.style.visibility = "hidden";
+
+                c_id.innerHTML = "Cancel";
+                c_id.onclick = function() {
+                    editCancel()
+                }
+
+                if (c_id.innerHTML != "Edit") {
+                    for (var i = 0; i < tempdbtn.length; i++) {
+                        if (tempdbtn[i].innerHTML == "Edit") {
+                            tempdbtn[i].style.visibility = "hidden";
+                        }
+                    }
+                }
+                var newConfirm = document.createElement("button");
+                newConfirm.type = 'button';
+                newConfirm.classList.add('btn', 'btn-outline-success');
+                newConfirm.innerText = 'Confirm'
+                newConfirm.setAttribute('name', 'EditConfirmBtn')
+                newConfirm.style.padding = '6px 10px'
+                newConfirm.style.margin = '0 14px'
+                newConfirm.onclick = function() {
+                    confirmEditAluno(id)
+                }
+
+                var shallbeEdited = c_id.parentElement.parentElement;
+                c_id.parentElement.appendChild(newConfirm)
+
+                var shallbRow = shallbeEdited.getElementsByTagName('td')
+                // console.log(shallbRow.length)
+                for (var i = 1; i < shallbRow.length - 5; i++) {
+                    // console.log(shallbRow[i].innerText)
+                    var newField = document.createElement("input");
+                    newField.setAttribute('name', shallbRow[i].getAttribute('name') + '_Edit');
+                    newField.type = 'text';
+                    newField.classList.add('form-control');
+                    newField.value = shallbRow[i].innerText;
+                    // console.log(newField.value)
+                    shallbRow[i].innerText = '';
+                    shallbRow[i].appendChild(newField);
+                }
+                
+                
+                // So apparently functions that are inside other functions inherit the variables too?
+                // they also arent just copies , we love you javascript
+                // WHY DOESNT IT GET tempdbtn THO WHAT
+                function editCancel() {
+                    c_id.innerHTML = "Edit";
+                    c_id.onclick = function() {
+                        editAluno(id)
+                    }
+                    c_id.parentElement.removeChild(newConfirm);
+
+                    crsbtnadd.style.visibility = "visible";
+
+                    for (var i = 0; i < tempdbtn.length; i++) {
+                        if (tempdbtn[i].innerHTML == "Edit") {
+                            tempdbtn[i].style.visibility = 'visible';
+                            // console.log("Showing Edit button:", tempdbtn[i]);
+                        }
+                    }
+                
+                    for (var i = 1; i < shallbRow.length - 5; i++) {
+                        var fieldCatch = document.getElementsByName(shallbRow[i].getAttribute('name') + '_Edit');
+                        // console.log(fieldCatch)
+                        shallbRow[i].innerText = fieldCatch[0].value; 
+                        
+                    }
+                }
+
+                function confirmEditAluno(id) {
+                    const courseData = {
+                        id: id,
+                        name: document.querySelector('input[name="Auser_name_Edit"]').value,
+                        email: document.querySelector('input[name="Auser_email_Edit"]').value,
+                        pass: document.querySelector('input[name="Auser_pass_Edit"]').value,
+                        cpf: document.querySelector('input[name="Auser_CPF_Edit"]').value,
+                        num: document.querySelector('input[name="Auser_phone_Edit"]').value,
+                        // Add more fields as needed  
+                    };
+                    // console.log('data: ', courseData.name)
+
+                    const courseDataParams = new URLSearchParams();
+                    for (const [key, value] of Object.entries(courseData)) {
+                        courseDataParams.append(key, value);
+                    }
+
+                    // Send a POST request to the Flask endpoint
+                    fetch('/AuserEdit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: courseDataParams,
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Handle the successful response from Flask
+                            console.log('Course updated successfully');
+                            // Refresh the page or update the UI as needed
+                        } 
+                        else {
+                            // Handle the error response from Flask
+                            console.error('Failed to update course');
+                        }
+                    })
+                    .catch(error => {
+                        // Handle any errors that occur during the request
+                        console.error(error);
+                    });
+
+                    editCancel(id);
+                }
+            }
+
+
+            function deleteAlunoPre(id) {
+                if (confirm("Tem certeza que deseja deletar aluno?") == false) {
+                    return "canceled"
+                }
+                else {
+                    $.ajax({
+                        type: "POST",
+                        url: "/deleteUser",
+                        data: {
+                            "id": id,
+                            detNmb: 0,
+                        },
+                        success: function(data) {
+                            console.log("User deleted successfully");
+                            location.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error deleting User: ", error);
+                            console.log(id)
+                        }
+                    });
+                }    
+            }
+
+            function NewAluno() {
+                // new course row
+                const countids = document.querySelectorAll("#checkthisonjs td[name='Auser_id']");  
+                let lastid = countids.length + 1;
+
+                for (var i = 0; i < tempdbtn.length; i++) {
+                    if (tempdbtn[i].innerHTML == "Edit") {
+                        tempdbtn[i].style.visibility = "hidden";
+                    }
+                }
+                
+                if (document.querySelector("#ConfirmBtn") == null) {
+                    var confirmButton = document.createElement("button");
+                    confirmButton.innerText = "CONFIRM";
+                    confirmButton.style.margin = '0 20px'
+                    confirmButton.classList.add("btn", "btn-outline-success");
+                    confirmButton.id = "ConfirmBtn";
+                    confirmButton.onclick = function() {
+                        const courseData = {
+                            id: document.querySelector('input[name="NusrId"]').value,
+                            name: document.querySelector('input[name="NusrName"]').value,
+                            email: document.querySelector('input[name="NusrEmail"]').value,
+                            pass: document.querySelector('input[name="NusrPass"]').value,
+                            CPF: document.querySelector('input[name="NusrCPF"]').value,
+                            Cnumber:  document.querySelector('input[name="NusrNum"]').value,
+                            // Add more fields as needed
+                        };
+
+                        // Send a POST request to the Flask endpoint
+                        fetch('/aUsrReg', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams(courseData),
+                        })  
+                        .then(response => {
+                            if (response.ok) {
+                                // Handle the successful response from Flask
+                                console.log('Course updated successfully');
+                                // Refresh the page or update the UI as needed
+                            } 
+                            else {
+                                // Handle the error response from Flask
+                                console.error('Failed to update course');
+                            }
+                        })
+                        .catch(error => {
+                            // Handle any errors that occur during the request
+                            console.error(error);
+                        });
+                        };
+                    buttoncontainer.appendChild(confirmButton);
+                }        
+
+                if (document.querySelector("#CancelBtn") == null) {
+                    var cancelButton = document.createElement("button");
+                    cancelButton.innerText = "CANCEL";
+                    cancelButton.type = 'button';
+                    cancelButton.classList.add("btn", "btn-warning");
+                    cancelButton.id = "CancelBtn";
+                    cancelButton.onclick = function() {
+                        cancelRowADD()
+                    }
+                    buttoncontainer.appendChild(cancelButton);
+                }      
+
+                var usrInput = document.createElement("tr");
+                usrInput.classList.add('NusrI');
+                usrInput.setAttribute('name', 'NewUsr');
+                usrInput.id = "UsrInput" + (lastid)
+
+                var usrI_name = document.createElement("input");
+                usrI_name.setAttribute('name', 'NusrName');
+                usrI_name.classList.add('form-control');
+
+                var usrI_email = document.createElement("input");
+                usrI_email.setAttribute('name', 'NusrEmail');
+                usrI_email.classList.add('form-control');
+
+                var usrI_pass = document.createElement("input");
+                usrI_pass.setAttribute('name', 'NusrPass');
+                usrI_pass.classList.add('form-control');
+
+                var usrICPF = document.createElement("input");
+                usrICPF.setAttribute('name', 'NusrCPF');
+                usrICPF.classList.add('form-control');
+
+                var usrI_num = document.createElement("input");
+                usrI_num.setAttribute('name', 'NusrNum');
+                usrI_num.classList.add('form-control');
+                
+
+                // hidden id input
+                var usr_id_hidden = document.createElement("input");
+                usr_id_hidden.style.pointerEvents = 'none';
+                usr_id_hidden.type = 'hidden';
+                usr_id_hidden.setAttribute('name', 'NusrId');
+                usr_id_hidden.value = lastid;
+                usr_id_hidden.classList.add('form-control');
+                usrInput.appendChild(usr_id_hidden);
+
+                var preUsrId = document.createElement("td");
+                preUsrId.classList.add("theNuid");
+                preUsrId.setAttribute('name', 'Auser_id')
+                preUsrId.innerHTML = lastid;
+                usrInput.appendChild(preUsrId);
+                
+                var tdName = document.createElement("td");
+                tdName.appendChild(usrI_name);
+                usrInput.appendChild(tdName);
+
+                var tdEmail = document.createElement("td");
+                tdEmail.appendChild(usrI_email);
+                usrInput.appendChild(tdEmail);
+
+                var tdPass = document.createElement("td");
+                tdPass.appendChild(usrI_pass);
+                usrInput.appendChild(tdPass);
+
+                var tdCPF = document.createElement("td");
+                tdCPF.appendChild(usrICPF);
+                usrInput.appendChild(tdCPF);
+
+                var tdNUM = document.createElement("td");
+                tdNUM.appendChild(usrI_num);
+                usrInput.appendChild(tdNUM);
+
+                var xCancBtn = document.createElement("button");
+                xCancBtn.type = 'button';
+                xCancBtn.innerText = "x";
+                xCancBtn.id = lastid;
+                xCancBtn.style.color = "#f43444";
+                xCancBtn.style.marginTop = "12%";
+                xCancBtn.style.marginRight = "15%";
+                xCancBtn.style.padding = "0px 20px";
+                xCancBtn.classList.add("btn", "btn-outline-danger");
+                xCancBtn.onclick = function() { 
+                    removeRow(xCancBtn.id)
+                };
+                usrInput.appendChild(xCancBtn);
+
+                //counts courses added +1
+                globalAddCourses += 1;
+                //console.log(globalAddCourses);
+
+                document.getElementById("checkthisonjs").appendChild(usrInput);
+
+                function cancelRowADD() { //cancels the adding of all rows
+                    var catchTrsNw = document.querySelectorAll("tr.NusrI");
+                    catchTrsNw.forEach(function(element) {
+                        element.remove();
+                    });
+
+                    globalAddCourses = 0;
+                    retrieveButtons();
+                }
+            }
+
+            function removeRow(btnId) { // removes newly added rows
+                // Remove row and update ids
+
+                var removeBtnrow = document.getElementById(btnId);
+                var shallbekilled = removeBtnrow.parentElement;
+                shallbekilled.parentElement.removeChild(shallbekilled);
+
+                // courses added -1
+                globalAddCourses -= 1;
+                //console.log(globalAddCourses);
+                if (globalAddCourses === 0) {
+                    retrieveButtons();
+                }
+                
+
+                var rowsToUpdate = document.querySelectorAll("#checkthisonjs .NusrI");
+
+                for (var i = 0; i < rowsToUpdate.length; i++) {
+                    var rowId = i + lastOG; // Update the ID based on the new position
+                    var row = rowsToUpdate[i];
+                    row.id = "usrInput" + rowId + 1;
+                    if (row.querySelector("button")) {
+                        row.querySelector("button").id = rowId + 1;
+                    }
+                    
+                    var courseIDcell = row.querySelector("td.theNuid");
+                    courseIDcell.innerHTML = rowId + 1 
+                }
+            }
+
+            function addAlunoCrs(id) {
+                // Get elements needed to manipulate them later
+                let cursCheckL = document.getElementById(id)
+                // console.log(id)
+
+                if (cursCheckL.checked) {
+                    // console.log(cursCheckL.checked)
+                    const upData = {
+                        id: id,
+                        detNmb: 1,
+                    }
+                    console.log(upData['detNmb'])
+
+                    fetch("/usrCRSreg", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(upData),
+                    })        
+                }
+                else {
+                    // console.log(cursCheckL.checked)
+                    const upData = {
+                        id : id,
+                        detNmb : 0
+                    }
+
+                    fetch("/usrCRSreg", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(upData),
+                    })        
+                }
+            }
+
+            let msIdCatch = []
+
+            function multipleDEL(id, detNmb = 0) {
+
+                if (document.querySelector("#MSdelBtn") == null) {
+                    var MSdelButton = document.createElement("button");
+                    MSdelButton.innerText = "MASS DELETE";
+                    MSdelButton.type = 'button';
+                    MSdelButton.classList.add("btn", "btn-danger");
+                    MSdelButton.id = "MSdelBtn";
+                    MSdelButton.onclick = function() {
+                        multipleDEL(id = '', detNmb = 1)
+                    }
+                    buttoncontainer.appendChild(MSdelButton);
+                }      
+
+                if (!msIdCatch.includes(id) && (id != '')) {
+                    msIdCatch.push(id)
+                }
+                else {
+                    for (let i = 0; i < msIdCatch.length; i++) {
+                        if (msIdCatch[i] == id) {
+                            msIdCatch.splice(i, 1)
+                        }
+                    }
+                }
+                
+                console.log(msIdCatch.length)
+                console.log(msIdCatch)
+
+                if (msIdCatch.length < 1) {
+                    buttoncontainer.removeChild(buttoncontainer.lastChild)
+                }
+
+
+                // console.log(msIdCatch)
+
+                if (detNmb != 0) {
+                    console.log('got here')
+
+                    const alunoS = {
+                        id: msIdCatch,
+                        detNmb: detNmb,
+                    }
+
+                    console.log(alunoS)
+
+                    fetch("/deleteUser", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(alunoS),
+                    })      
+                    .then(response => {
+                        if (response.ok) {
+                            // Handle the successful response from Flask
+                            console.log('Mass deletion successfull');
+                            location.reload()
+                            // Refresh the page or update the UI as needed
+                        }
+                    })
+                }
+
+            }
+
+            
+        </script>
+    </body>
+
+</html>
