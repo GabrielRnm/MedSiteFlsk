@@ -113,7 +113,6 @@ def coursMList():
     return render_template("/cursos/coursPageCreate.html", cursos=cursos, cursoC=cursoC, cursoCs = 100 + int((cursoC[0][0]) * 2) )
 
 
-
 @app.route("/coursMCreate", endpoint="cours_m_create", methods=["POST"])
 @loginRequired
 @isAdminPage
@@ -132,9 +131,10 @@ def coursMCreate():
     
     try:
         for i, name in enumerate(newCrsNames):
-            checkF = os.path.isfile('templates/cursos/curpages/' +name+ '.html')
-            if (checkF == False) :
-                file = open('templates/cursos/curpages/'+name+'.html', 'x')
+            checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(name, name))
+            if (checkF == False):
+                os.mkdir('templates/cursos/curpages/{}'.format(name))
+                file = open('templates/cursos/curpages/{}/{}.html'.format(name, name), 'x')
                 file.write(backend.dynamicHTMLS.exHtml)
             else:
                 print("Catch_Error[crsCreate]: {} html page exists already".format(name))
@@ -142,8 +142,9 @@ def coursMCreate():
             # print(file.read())
             dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
             chkCrsEx = dbcursor.fetchall()
+            print(chkCrsEx)
 
-            if (chkCrsEx is None or False):
+            if (len(chkCrsEx) < 1):
                 dbcursor.execute(
                     "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)", 
                     (
@@ -191,13 +192,16 @@ def coursePgRdr(course):
     crsName = dbcursor.fetchone()
     crsName = str(crsName[0])
     print(crsName)
-    checkF = os.path.isfile('templates/cursos/curpages/' + crsName + '.html')
+    checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(crsName, crsName))
     print(checkF) # always getting false
     if (checkF):
+        dbcursor.execute("SELECT * FROM classes WHERE a_curs_id = %s", ((course, )))
+        aulas = dbcursor.fetchall()
+        
         #return render_template("/cursos/curpages/DefaultCurTMP.html", crsName=crsName)
-        return render_template("/cursos/curpages/{}.html".format(crsName), crsName=crsName)
+        return render_template("/cursos/curpages/{}/{}.html".format(crsName, crsName), crsName=crsName, aulas=aulas)
     else:
-        return ("#0")
+        return render_template("/cursos/curpages/curNoN.html")
         
 
 

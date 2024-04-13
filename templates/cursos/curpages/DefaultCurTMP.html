@@ -35,7 +35,7 @@
     <body>
         <div class="curHmain">
             <div {% if curTtlIMG is not none %}class="cur_headrNoIMG"{% else %}class="cur_headr"{% endif %}></div>
-            <h1 class="h1 cursTl" style="color: rgb(255, 230, 230); vertical-align: bottom;">{% block course_name %}Course name{% endblock %}</h1>
+            <h1 class="h1 cursTl">{% block course_name %}Course name{% endblock %}</h1>
             <ul class="logregoutbox list-group list-group-flush list-group-horizontal">
                 {% if session["usr_id"] %}
                     <a href="/logout" style="text-decoration: none;"><li class="list-group-item">Sair</li></a>
@@ -65,28 +65,53 @@
                 <hr>
                 {# Needs Backend Right now just for show #}
                 <div class="crsCntntVid">
-                    Video Player Box
+                    <h6>Video Player Box | Aula [numero]</h6>
+                    <iframe src="{{videolink}}"></iframe>
                 </div>
 
-                {# Needs Backend Right now just for show #}
                 <div class="crsCntntList">
                     <ol class="mainCntList list-group">
-                        <li class="list-group-item"> The class
+                        {% for x in aulas %}
+                        <li class="list-group-item"> x[3]
+                            {#
                             <ul class="list-group"> 
                                 <li class="crsListSubCn list-group-item"> The content </li>
                                 <li class="crsListSubCn list-group-item"> The content </li>
                             </ul>
+                            #}
                         </li>
+                        {% endfor %}
                     </ol>
+                    {% if session["isAdmin"] %}
+                        <button class="btn" id='classAddbtn'>+</button>
+                        <div class="popup-wrapper">
+                            <div class="popup">
+                                <div class="popup-content">
+                                    <div class="popup-sideb">
+                                        <div class="VideoAula">
+                                            <p class="VideoAulap">Video</p>
+                                        </div>
+                                        <div class="DocumentoAula">
+                                            <p class="DocumentoAulap">Documento</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="popup-close">x</div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-                {% block main %}
+                <div class="descMn">
+                {% block Descblock %}
                     Text Test
                 {% endblock %}
+                </div>
 
             </div>
-
+        
         </main>
         {% if session["isAdmin"] %}
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script type="module" src="/static/crsApg.js"></script>
         {% endif %}
     </body>
