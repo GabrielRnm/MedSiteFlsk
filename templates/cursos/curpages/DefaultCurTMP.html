@@ -72,7 +72,7 @@
                 <div class="crsCntntList">
                     <ol class="mainCntList list-group">
                         {% for x in aulas %}
-                        <li class="list-group-item"> x[3]
+                        <li class="list-group-item"> {{ x[3] }}
                             {#
                             <ul class="list-group"> 
                                 <li class="crsListSubCn list-group-item"> The content </li>
@@ -95,6 +95,31 @@
                                             <p class="DocumentoAulap">Documento</p>
                                         </div>
                                     </div>
+                                    <div class="VAForm">
+                                        <form>
+                                            <input name="type" type="text" value="0" style="visibility: hidden;position: absolute;">
+                                            <h6>Link</h6>
+                                            <input name="link" type="url">
+                                            <h6>Título da Lição</h6>
+                                            <input name="title" class="classtitle" name="classtitle0">
+                                            <h6>Descrição</h6>
+                                            <textarea class="form-control classdesc"></textarea>
+                                            <button type="submit">Confirmar</button>
+                                        </form>
+                                    </div>
+                                    <div class="DAForm">
+                                        <form action="/classMCreate" method="post" enctype='multipart/form-data'>
+                                            <input name="course" type="text" value="{{ course }}" style="visibility: hidden;position: absolute;">
+                                            <input name="type" type="text" value="1" style="visibility: hidden;position: absolute;">
+                                            <h6>Arquivo</h6>
+                                            <input name="docF" type="file" accept=".pdf,.mp4,.webm,.ogv,.png,.jpeg,.jpg,.gif,.mp3,.ogg,.doc,.docx,.odt,.ppt,.pptx,.odp,.xls,.xlsx,.ods">
+                                            <h6>Título da Lição</h6>
+                                            <input class="classtitle" name="classtitle1">
+                                            <h6>Descrição</h6>
+                                            <textarea name="clssDesc" class="form-control classdesc"></textarea>
+                                            <button type="submit">Confirmar</button>
+                                        </form>
+                                    </div>
                                 </div>
                                 <div class="popup-close">x</div>
                             </div>
@@ -112,6 +137,9 @@
         </main>
         {% if session["isAdmin"] %}
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script type="text/javascript">
+                const coursid = '{{course}}';
+            </script>
             <script type="module" src="/static/crsApg.js"></script>
         {% endif %}
     </body>

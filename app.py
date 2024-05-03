@@ -3,6 +3,7 @@ import mysql.connector
 import numpy # used for subtracting from array values
 from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_session import Session
+from werkzeug.utils import secure_filename
 from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage
 from datetime import date, datetime
 import backend.dynamicHTMLS
@@ -14,6 +15,7 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config['UPLOAD_FOLDER'] = 'backend/upload'
 Session(app)
 
 
@@ -80,6 +82,62 @@ def adminMainPage():
 
 ## COURSE CREATION FUNCTIONS ##
 
+@app.route("/classMCreate", endpoint="class_m_create", methods=["POST"])
+@loginRequired
+@isAdminPage
+def classMCreate():
+    # New Class
+    clssTyp = request.form.get('type')
+    #print(clssTyp)
+    if int(clssTyp) == 1:
+        course = request.form.get('course')
+        clssFile = request.files['docF']
+        clssTitle = request.form.get('classtitle1')
+        clssDesc = request.form.get('clssDesc')
+
+        print(clssFile)
+        print(clssTitle)
+        print(clssDesc)
+
+        filename = secure_filename(clssFile.filename)
+        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        #SQL
+
+        dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (course,))
+        crsNM = dbcursor.fetchone()
+        crsNM = crsNM[0]
+
+        dbcursor.execute("SELECT COUNT(a_id) FROM classes")
+        a_idC = dbcursor.fetchone()
+        a_idC = int(a_idC[0])
+
+        dbcursor.execute("SELECT COUNT(c_a_id) FROM classes")
+        c_a_idC = dbcursor.fetchone()
+        c_a_idC = int(c_a_idC[0])
+
+        dbcursor.execute(
+            "INSERT INTO classes (a_id, c_a_id, cntnt, a_name, a_curs_id) VALUES(%s, %s, %s, %s, %s)", 
+            (
+                a_idC + 1,
+                c_a_idC + 1,
+                ('{}.py'.format(crsNM)),
+                clssTitle,
+                course,
+            )
+        )
+
+        file = open("backend/upload/cursos/{}/{}.py".format(crsNM, crsNM), "w")
+        file.write('class{} = {}'.format(c_a_idC + 1, "<content here>")) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
+        
+
+        db.commit()
+        return coursePgRdr(course)
+     
+    elif int(clssTyp) == 0:
+        pass
+    else:
+        return '????'
 
 @app.route("/coursMEdit", endpoint="cours_m_edit", methods=["POST"])
 @loginRequired
@@ -132,14 +190,15 @@ def coursMCreate():
     try:
         for i, name in enumerate(newCrsNames):
             checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(name, name))
+            checkF1 = os.path.isdir('backend/upload/cursos/{}'.format(name))
             if (checkF == False):
                 os.mkdir('templates/cursos/curpages/{}'.format(name))
                 file = open('templates/cursos/curpages/{}/{}.html'.format(name, name), 'x')
                 file.write(backend.dynamicHTMLS.exHtml)
-            else:
-                print("Catch_Error[crsCreate]: {} html page exists already".format(name))
-            # file = open('templates/cursos/curpages/'+name+'.html', 'r')
-            # print(file.read())
+            if (checkF1 == False):
+                os.mkdir('backend/upload/cursos/{}'.format(name))
+                file = open('backend/upload/cursos/{}/{}.py'.format(name, name), "x")
+                
             dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
             chkCrsEx = dbcursor.fetchall()
             print(chkCrsEx)
@@ -175,31 +234,41 @@ def coursMCreate():
 @isAdminPage
 def deleteCourse():
     id = request.form.get("id")
+
+    dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (id,))
+    curNM = dbcursor.fetchone()
+    curNM = curNM[0]
+
     dbcursor.execute("DELETE FROM curso_check WHERE cc_curs_id = %s", ((id, )))
     db.commit()
+
     dbcursor.execute("DELETE FROM curso WHERE curs_id = %s", ((id,)))
     db.commit()
+
     # decrement ids bigger than deleted id
     dbcursor.execute("UPDATE curso SET curs_id = curs_id - 1 WHERE curs_id > %s", ((id,)))
     db.commit()
+
+    """
+    checkF = os.path.isdir('templates/cursos/curpages/{}'.format(curNM))
+    if (checkF == True):
+        os.rmdir('templates/cursos/curpages/{}'.format(curNM))
+    """
     return redirect("/coursMList")
 
 @app.route("/coursePgRdr/<course>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
 def coursePgRdr(course):
-    # crs = request.form['course']
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
     crsName = dbcursor.fetchone()
     crsName = str(crsName[0])
-    print(crsName)
     checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(crsName, crsName))
-    print(checkF) # always getting false
     if (checkF):
         dbcursor.execute("SELECT * FROM classes WHERE a_curs_id = %s", ((course, )))
         aulas = dbcursor.fetchall()
         
         #return render_template("/cursos/curpages/DefaultCurTMP.html", crsName=crsName)
-        return render_template("/cursos/curpages/{}/{}.html".format(crsName, crsName), crsName=crsName, aulas=aulas)
+        return render_template("/cursos/curpages/{}/{}.html".format(crsName, crsName), crsName=crsName, aulas=aulas, course=course)
     else:
         return render_template("/cursos/curpages/curNoN.html")
         
