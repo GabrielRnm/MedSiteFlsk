@@ -32,6 +32,7 @@ def isAdmin(f):
             session["isAdmin"] = True
         return f(*args, **kwargs)
     return decorated_function
+    # make sure this database based instead of id based on production
     # make check if username is in list of names/ids // nope
 
 

@@ -96,11 +96,9 @@ def classMCreate():
         clssDesc = request.form.get('clssDesc')
 
         print(clssFile)
+        print(clssFile.filename)
         print(clssTitle)
         print(clssDesc)
-
-        filename = secure_filename(clssFile.filename)
-        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         #SQL
 
@@ -112,7 +110,9 @@ def classMCreate():
         a_idC = dbcursor.fetchone()
         a_idC = int(a_idC[0])
 
-        dbcursor.execute("SELECT COUNT(c_a_id) FROM classes")
+        print(a_idC)
+
+        dbcursor.execute("SELECT COUNT(c_a_id) FROM classes WHERE a_curs_id = %s", (course,))
         c_a_idC = dbcursor.fetchone()
         c_a_idC = int(c_a_idC[0])
 
@@ -127,17 +127,33 @@ def classMCreate():
             )
         )
 
-        file = open("backend/upload/cursos/{}/{}.py".format(crsNM, crsNM), "w")
-        file.write('class{} = {}'.format(c_a_idC + 1, "<content here>")) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
+        # Sudden folder switch
+        app.config['UPLOAD_FOLDER'] = 'backend/upload/cursos/{}'.format(crsNM)
+        filename = secure_filename(clssFile.filename)
+        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        file = open("backend/upload/cursos/{}/{}.py".format(crsNM, crsNM), "a")
+        file.write('\n\n{} = ClssCnt(True, "{}")'.format(clssTitle, clssFile.filename)) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
         
 
         db.commit()
-        return coursePgRdr(course)
+        return redirect("/coursePgRdr/{}".format(course))
      
     elif int(clssTyp) == 0:
         pass
     else:
         return '????'
+    
+@app.route("/classMDel", endpoint="class_m_del", methods=["POST"])
+@loginRequired
+@isAdminPage
+def classMDel():
+    # List
+    # 1 - DELETE MYSQL ROW
+    # 2 - REALIGN ROWS
+    # 3 - DELETE FILES ?
+    # 4 - DELETE FROM PY FILE
+    pass
 
 @app.route("/coursMEdit", endpoint="cours_m_edit", methods=["POST"])
 @loginRequired
@@ -183,46 +199,59 @@ def coursMCreate():
     newCrsProfs = request.form.getlist("NcrsProf")
     newCrsPrices = request.form.getlist("NcrsPrice")
 
+    print(newCrsNames)
+
     if newCsrIds == None or newCsrIds == '':
+        return pageApology("None type detection", 400)
+    if newCrsNames == None or newCrsNames == '':
         return pageApology("None type detection", 400)
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
     
     try:
         for i, name in enumerate(newCrsNames):
-            checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(name, name))
-            checkF1 = os.path.isdir('backend/upload/cursos/{}'.format(name))
-            if (checkF == False):
-                os.mkdir('templates/cursos/curpages/{}'.format(name))
-                file = open('templates/cursos/curpages/{}/{}.html'.format(name, name), 'x')
-                file.write(backend.dynamicHTMLS.exHtml)
-            if (checkF1 == False):
-                os.mkdir('backend/upload/cursos/{}'.format(name))
-                file = open('backend/upload/cursos/{}/{}.py'.format(name, name), "x")
-                
-            dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
-            chkCrsEx = dbcursor.fetchall()
-            print(chkCrsEx)
-
-            if (len(chkCrsEx) < 1):
-                dbcursor.execute(
-                    "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)", 
-                    (
-                        newCsrIds[i],
-                        name,
-                        newCrsProfs[i],
-                        newCrsPrices[i],
-                        # all the amazing list array stuff hold on lemme do the html first
-                    )
-                )
-                db.commit()
+            if (name == ''):
+                pass
             else:
-                print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
-        # Now we need to do the same But this time we will be creating TABLES for the courses
-        # Each TABLE will have Classes which hold the links to their courses content, god this sucks
-        # now we are gonna need to remake that file system to also make folders each for a course that gets added
-        # maybe i should look into how other courses do this i really do not wanna mess this up cuz its one mistake
-        # and then i gotta do it all over again.
-        # Dont forget the deleteCourse function will need to go over everything else too!
+                # Take out extra spaces accidentaly typed
+                name = name.strip()
+
+                checkF = os.path.isdir('templates/cursos/curpages/{}'.format(name))
+                checkF1 = os.path.isdir('backend/upload/cursos/{}'.format(name))
+                    
+                dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
+                chkCrsEx = dbcursor.fetchall()
+                
+                if (len(chkCrsEx) < 1):
+                    dbcursor.execute(
+                        "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)", 
+                        (
+                            newCsrIds[i],
+                            name,
+                            newCrsProfs[i],
+                            newCrsPrices[i],
+                        )
+                    )
+                    db.commit()
+                else:
+                    print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
+
+                # Better to do this after so if the database injection fails we dont create unecessary files
+                if (checkF == False):
+                    os.mkdir('templates/cursos/curpages/{}'.format(name))
+                    file = open('templates/cursos/curpages/{}/{}.html'.format(name, name), 'x')
+                    file.write(backend.dynamicHTMLS.exHtml)
+                if (checkF1 == False):
+                    os.mkdir('backend/upload/cursos/{}'.format(name))
+                    file = open('backend/upload/cursos/{}/{}.py'.format(name, name), "x")
+                    file.write("from clssType import ClssCnt \n")
+
+                
+            # Now we need to do the same But this time we will be creating TABLES for the courses
+            # Each TABLE will have Classes which hold the links to their courses content, god this sucks
+            # now we are gonna need to remake that file system to also make folders each for a course that gets added
+            # maybe i should look into how other courses do this i really do not wanna mess this up cuz its one mistake
+            # and then i gotta do it all over again.
+            # Dont forget the deleteCourse function will need to go over everything else too!
     except TypeError as e:
         print(e)
         print("commit failure check Course creation function.")
@@ -258,14 +287,24 @@ def deleteCourse():
 
 @app.route("/coursePgRdr/<course>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
-def coursePgRdr(course):
+def coursePgRdr(course, clss = 1):
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
     crsName = dbcursor.fetchone()
     crsName = str(crsName[0])
+
+    dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s AND c_a_id=%s", (course, clss))
+    clssCNT = dbcursor.fetchall()
+    if (len(clssCNT) > 0):
+        clssCNT = clssCNT[0]
+
+    print(clssCNT)
+
     checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(crsName, crsName))
     if (checkF):
         dbcursor.execute("SELECT * FROM classes WHERE a_curs_id = %s", ((course, )))
         aulas = dbcursor.fetchall()
+        # Trust me this is necessary // fixes the bug for deleted classes still appearing
+        aulas = aulas
         
         #return render_template("/cursos/curpages/DefaultCurTMP.html", crsName=crsName)
         return render_template("/cursos/curpages/{}/{}.html".format(crsName, crsName), crsName=crsName, aulas=aulas, course=course)
@@ -608,11 +647,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
-
-# AFTEREND
-# Funções para quando eu tiver pouco tempo para manusear o site / oportunidade melhor surgir
-# Muito difícil implementar agr + leva tempo
 
 
 
