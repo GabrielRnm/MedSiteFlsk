@@ -1,0 +1,12 @@
+class ClssCnt:
+    def __init__(self, file, content):
+        file = bool
+        content = str
+
+Mclass<id> = ClssCnt(True, 'yourfile.pdf')
+
+# Each of these are supposed to specify what type of content a class from a course holds
+# True means the class's content is tied to a file pdf/mp4
+# False means its associated with a link(yotube video)
+# The names arent random, they are tied to the class's name on the mysql database
+

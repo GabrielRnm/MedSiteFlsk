@@ -1,7 +1,6 @@
 from flask import redirect, render_template, session
 from functools import wraps
 
-
 def pageApology(message, code=400):
     """ Apology message for user | EXAMPLE : Invalid Username etc... """
     return render_template("apologyPage.html", top=code, bottom=(message)), code

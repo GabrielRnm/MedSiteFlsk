@@ -1,4 +1,4 @@
 class ClssCnt:
     def __init__(self, file, content):
-        file = bool
-        content = str
+        self.file = bool(file)
+        self.content = str(content)

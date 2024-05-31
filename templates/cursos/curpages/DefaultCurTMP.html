@@ -64,15 +64,25 @@
                 Before The content
                 <hr>
                 {# Needs Backend Right now just for show #}
-                <div class="crsCntntVid">
-                    <h6>Video Player Box | Aula [numero]</h6>
-                    <iframe src="{{videolink}}"></iframe>
-                </div>
+                {% if isFile is false %}
+                    <div class="crsCntntVid">
+                        <h6>Video Player Box | Aula [numero]</h6>
+                        <iframe src="{{videolink}}"></iframe>
+                    </div>
+                {% else %}
+                    <div class="crsCntntFl">
+                        <div class="DwBox">
+                            <a href="{{fPath}}" download="{{cPath}}" target="_blank">
+                                <span>{{cPath}}</span>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
 
                 <div class="crsCntntList">
                     <ol class="mainCntList list-group">
                         {% for x in aulas %}
-                        <li class="clssLI list-group-item"> {{ x[3] }}</li>
+                        <li class="clssLI list-group-item"> {{ x[4] }}</li>
                         <!--
                             {#
                             <ul class="list-group"> 

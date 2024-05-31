@@ -47,6 +47,7 @@ body {
     width: 95%;
     height: 1500px;
     display: block;
+    overflow: hidden;
 }
 
 .crsCntntVid {
@@ -219,4 +220,18 @@ body {
     display: inline-block;
     height: 150px;
 
+}
+
+.DwBox {
+    border: rgb(255, 41, 41) 2px solid;
+    background-color: rgb(233, 117, 128);
+    color: antiquewhite;
+    width: 40%;
+    height: 30%;
+    position: absolute;
+    margin: 10px 10px;
+}
+
+.DwBox a {
+    color: rgb(255, 249, 242);
 }

@@ -1,12 +1,13 @@
 import os.path
 import mysql.connector
-import numpy # used for subtracting from array values
+import numpy
+from backend import dynamicHTMLS
+from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage 
+from datetime import date, datetime
 from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_session import Session
+from importlib import import_module
 from werkzeug.utils import secure_filename
-from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage
-from datetime import date, datetime
-import backend.dynamicHTMLS
 
 
 
@@ -15,7 +16,7 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-app.config['UPLOAD_FOLDER'] = 'backend/upload'
+app.config['UPLOAD_FOLDER'] = 'static/assets/upload'
 Session(app)
 
 
@@ -27,15 +28,17 @@ db = mysql.connector.connect(
     raise_on_warnings = True,
 )
 
-dbcursor = db.cursor(buffered=True)  
+dbcursor = db.cursor(buffered=True) 
 
-# for finding files mostly img src
+def from_module_get(module_name, attr):
+    return getattr(import_module(module_name), attr)
+
+# for finding files mostly img src | this is for jinja
 @app.template_filter('find')
 def find(haystack, needle):
     if not isinstance(haystack, str):
         return False
     return needle in haystack
-
 
 ## PAGE FUNCTIONS ##
 
@@ -89,7 +92,7 @@ def classMCreate():
     # New Class
     clssTyp = request.form.get('type')
     #print(clssTyp)
-    if int(clssTyp) == 1:
+    if int(clssTyp) == 1: # 1 = Document/File
         course = request.form.get('course')
         clssFile = request.files['docF']
         clssTitle = request.form.get('classtitle1')
@@ -106,6 +109,8 @@ def classMCreate():
         crsNM = dbcursor.fetchone()
         crsNM = crsNM[0]
 
+        crsNMB = crsNM.replace(' ', '_')
+
         dbcursor.execute("SELECT COUNT(a_id) FROM classes")
         a_idC = dbcursor.fetchone()
         a_idC = int(a_idC[0])
@@ -121,25 +126,31 @@ def classMCreate():
             (
                 a_idC + 1,
                 c_a_idC + 1,
-                ('{}.py'.format(crsNM)),
+                ('{}.py'.format(crsNMB)),
                 clssTitle,
                 course,
             )
         )
+        db.commit()
+
+        dbcursor.execute(
+            "SELECT * FROM classes WHERE a_id=%s", (a_idC + 1,)
+        )
+        idenC = dbcursor.fetchall()
+        idenC = idenC[0]
 
         # Sudden folder switch
-        app.config['UPLOAD_FOLDER'] = 'backend/upload/cursos/{}'.format(crsNM)
+        app.config['UPLOAD_FOLDER'] = 'static/assets/upload/cursos/{}'.format(crsNMB)
         filename = secure_filename(clssFile.filename)
         clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        file = open("backend/upload/cursos/{}/{}.py".format(crsNM, crsNM), "a")
-        file.write('\n\n{} = ClssCnt(True, "{}")'.format(clssTitle, clssFile.filename)) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
-        
+        file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
+        file.write('\n\nMclass_{} = ClssCnt(True, "{}")'.format(idenC[0], filename)) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
+        file.close()
 
-        db.commit()
         return redirect("/coursePgRdr/{}".format(course))
      
-    elif int(clssTyp) == 0:
+    elif int(clssTyp) == 0: # 0 = Link
         pass
     else:
         return '????'
@@ -189,7 +200,7 @@ def coursMList():
 
 @app.route("/coursMCreate", endpoint="cours_m_create", methods=["POST"])
 @loginRequired
-@isAdminPage
+#@isAdminPage
 def coursMCreate():
     # Criar curso por function Sendo que Só admin pode criar
     # Ao mesmo tempo que vai criar o curso no databank tem que criar um html do curso
@@ -214,9 +225,10 @@ def coursMCreate():
             else:
                 # Take out extra spaces accidentaly typed
                 name = name.strip()
+                nameB = name.replace(' ', '_')
 
-                checkF = os.path.isdir('templates/cursos/curpages/{}'.format(name))
-                checkF1 = os.path.isdir('backend/upload/cursos/{}'.format(name))
+                checkF = os.path.isdir('templates/cursos/curpages/{}'.format(nameB))
+                checkF1 = os.path.isdir('static/assets/upload/cursos/{}'.format(nameB))
                     
                 dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
                 chkCrsEx = dbcursor.fetchall()
@@ -237,12 +249,12 @@ def coursMCreate():
 
                 # Better to do this after so if the database injection fails we dont create unecessary files
                 if (checkF == False):
-                    os.mkdir('templates/cursos/curpages/{}'.format(name))
-                    file = open('templates/cursos/curpages/{}/{}.html'.format(name, name), 'x')
-                    file.write(backend.dynamicHTMLS.exHtml)
+                    os.mkdir('templates/cursos/curpages/{}'.format(nameB))
+                    file = open('templates/cursos/curpages/{}/{}.html'.format(nameB, nameB), 'x')
+                    file.write(dynamicHTMLS.exHtml)
                 if (checkF1 == False):
-                    os.mkdir('backend/upload/cursos/{}'.format(name))
-                    file = open('backend/upload/cursos/{}/{}.py'.format(name, name), "x")
+                    os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
+                    file = open('static/assets/cursos/{}/{}.py'.format(nameB, nameB), "x")
                     file.write("from clssType import ClssCnt \n")
 
                 
@@ -260,13 +272,15 @@ def coursMCreate():
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
 @loginRequired  
-@isAdminPage
+#@isAdminPage
 def deleteCourse():
     id = request.form.get("id")
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (id,))
     curNM = dbcursor.fetchone()
     curNM = curNM[0]
+
+    curNMB = curNM.replace(' ', '_')
 
     dbcursor.execute("DELETE FROM curso_check WHERE cc_curs_id = %s", ((id, )))
     db.commit()
@@ -278,36 +292,45 @@ def deleteCourse():
     dbcursor.execute("UPDATE curso SET curs_id = curs_id - 1 WHERE curs_id > %s", ((id,)))
     db.commit()
 
-    """
-    checkF = os.path.isdir('templates/cursos/curpages/{}'.format(curNM))
+    checkF = os.path.isdir('templates/cursos/curpages/{}'.format(curNMB))
     if (checkF == True):
-        os.rmdir('templates/cursos/curpages/{}'.format(curNM))
-    """
+        os.rmdir('templates/cursos/curpages/{}'.format(curNMB))
+
     return redirect("/coursMList")
 
 @app.route("/coursePgRdr/<course>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
 def coursePgRdr(course, clss = 1):
+
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
     crsName = dbcursor.fetchone()
     crsName = str(crsName[0])
 
+    crsNameB = crsName.replace(' ', '_')
+
     dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s AND c_a_id=%s", (course, clss))
     clssCNT = dbcursor.fetchall()
-    if (len(clssCNT) > 0):
-        clssCNT = clssCNT[0]
 
-    print(clssCNT)
-
-    checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(crsName, crsName))
+    checkF = os.path.isfile('templates/cursos/curpages/{}/{}.html'.format(crsNameB, crsNameB))
     if (checkF):
         dbcursor.execute("SELECT * FROM classes WHERE a_curs_id = %s", ((course, )))
         aulas = dbcursor.fetchall()
-        # Trust me this is necessary // fixes the bug for deleted classes still appearing
-        aulas = aulas
-        
+        aulas = aulas # fixes the bug for deleted classes still appearing
+
         #return render_template("/cursos/curpages/DefaultCurTMP.html", crsName=crsName)
-        return render_template("/cursos/curpages/{}/{}.html".format(crsName, crsName), crsName=crsName, aulas=aulas, course=course)
+        if (len(clssCNT) > 0):
+            clssCNT = clssCNT[0]
+
+            module_name = "static.assets.upload.cursos.{}.{}".format(crsNameB, crsNameB)
+            objname = 'Mclass_{}'.format(clssCNT[0])
+
+            module = from_module_get(module_name, objname)
+
+            fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, module.content)
+
+            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, isFile=module.file, cPath=module.content, fPath=fPath)
+        else:
+            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course)
     else:
         return render_template("/cursos/curpages/curNoN.html")
         
