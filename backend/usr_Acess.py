@@ -1,6 +1,8 @@
 from flask import redirect, render_template, session
 from functools import wraps
 
+adminBList = ["gabrielrosamrt@gmail.com", "ana.gioanni@gmail.com"]
+
 def pageApology(message, code=400):
     """ Apology message for user | EXAMPLE : Invalid Username etc... """
     return render_template("apologyPage.html", top=code, bottom=(message)), code
@@ -25,7 +27,7 @@ def isAdmin(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("usr_id") != 1:
+        if session.get("email") not in adminBList:
             session["isAdmin"] = False
         else:
             session["isAdmin"] = True
@@ -39,7 +41,7 @@ def isAdminPage(f):
     # ACTUAL ADMIN PAGES
 
     def decorated_function(*args, **kwargs):
-        if session.get("usr_id") != 1:
+        if session.get("email") not in adminBList:
             return redirect("/usrMainPage")
         return f(*args, **kwargs)
     return decorated_function

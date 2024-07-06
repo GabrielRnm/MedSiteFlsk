@@ -63,26 +63,43 @@
             <div class="crsCntntWrap">
                 Before The content
                 <hr>
-                {# Needs Backend Right now just for show #}
+                {% if isFile is false %}
+                    {% if session["isAdmin"] %}
+                    <div class="docBw">
+                        <a id='docAddbtn'>
+                            <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                            <span>UPLOAD</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
                 {% if isFile is false %}
                     <div class="crsCntntVid">
                         <h6>Video Player Box | Aula [numero]</h6>
-                        <iframe src="{{videolink}}"></iframe>
+                        <iframe allowFullscreen src="{{cPath}}"></iframe>
                     </div>
                 {% else %}
                     <div class="crsCntntFl">
-                        <div class="DwBox">
-                            <a href="{{fPath}}" download="{{cPath}}" target="_blank">
-                                <span>{{cPath}}</span>
+                        <div class="docBw">
+                            <a href="{{ fPath }}" download="{{ fPath }}" target="_blank">
+                                <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                <span>Lista</span>
                             </a>
                         </div>
+                    </div>
+                    <div class="crsCntntVid">
+                        <h6>Video Player Box | Aula [numero]</h6>
+                        <iframe allowFullscreen src="{{cPath}}"></iframe>
                     </div>
                 {% endif %}
 
                 <div class="crsCntntList">
                     <ol class="mainCntList list-group">
                         {% for x in aulas %}
-                        <li class="clssLI list-group-item"> {{ x[4] }}</li>
+                        <div>
+                            <li class="clssLI list-group-item"> <a href="{{ url_for('cours_redir_pg', course=course,clss=x[2]) }}">{{ x[4] }} </a> {% if session["isAdmin"] %}<button class="btn delbtncls" name="{{x[0]}}">X</button>{% endif %} </li>
+                        </div>
                         <!--
                             {#
                             <ul class="list-group"> 
@@ -103,37 +120,63 @@
                                         <div class="VideoAula">
                                             <p class="VideoAulap">Video</p>
                                         </div>
+                                        {#
                                         <div class="DocumentoAula">
                                             <p class="DocumentoAulap">Documento</p>
                                         </div>
+                                        #}
                                     </div>
                                     <div class="VAForm">
-                                        <form>
+                                        <form action="/classMCreate" method="post" enctype='multipart/form-data'>
+                                            <input name="course" type="text" value="{{ course }}" style="visibility: hidden;position: absolute;">
                                             <input name="type" type="text" value="0" style="visibility: hidden;position: absolute;">
                                             <h6>Link</h6>
-                                            <input name="link" type="url">
+                                            <input name="link" type="url" style="width: 80%;" required>
                                             <h6>Título da Lição</h6>
-                                            <input name="title" class="classtitle" name="classtitle0">
-                                            <h6>Descrição</h6>
-                                            <textarea class="form-control classdesc"></textarea>
-                                            <button type="submit">Confirmar</button>
+                                            <input class="classtitle" name="classtitle0" required style="width: 80%;">
+                                            <h6>Documento</h6>
+                                            <hr style="visibility: hidden;">
+                                            <input class="form-control" name="docF" type="file" accept=".pdf" style="width: 50%;">
+                                            <br>
+                                            <button type=submit>Confirmar</button>
                                         </form>
                                     </div>
+                                    {#
                                     <div class="DAForm">
                                         <form action="/classMCreate" method="post" enctype='multipart/form-data'>
                                             <input name="course" type="text" value="{{ course }}" style="visibility: hidden;position: absolute;">
                                             <input name="type" type="text" value="1" style="visibility: hidden;position: absolute;">
                                             <h6>Arquivo</h6>
-                                            <input name="docF" type="file" accept=".pdf,.mp4,.webm,.ogv,.png,.jpeg,.jpg,.gif,.mp3,.ogg,.doc,.docx,.odt,.ppt,.pptx,.odp,.xls,.xlsx,.ods">
+                                            <input class="form-control" name="docF" type="file" accept=".pdf" required style="width: 50%;">
                                             <h6>Título da Lição</h6>
-                                            <input class="classtitle" name="classtitle1">
+                                            <input class="classtitle" name="classtitle1" required>
                                             <h6>Descrição</h6>
                                             <textarea name="clssDesc" class="form-control classdesc"></textarea>
                                             <button type="submit">Confirmar</button>
                                         </form>
                                     </div>
+                                    #}
                                 </div>
                                 <div class="popup-close">x</div>
+                            </div>
+                        </div>
+                        <div class="popup-wrapper" id="ppwb">
+                            <div class="popup" id="doc">
+                                <div class="popup-content">
+                                    <div class="popup-sideb"></div>
+                                    <div class="DAForm" id="DFormB">
+                                        <form action="/classMCreate" method="post" enctype='multipart/form-data'>
+                                            <input name="classN" type="text" value="{{ clss }}" style="visibility: hidden;position: absolute;">
+                                            <input name="course" type="text" value="{{ course }}" style="visibility: hidden;position: absolute;">
+                                            <input name="type" type="text" value="1" style="visibility: hidden;position: absolute;">
+                                            <h6>Arquivo</h6>
+                                            <hr style="visibility: hidden;">
+                                            <input class="form-control" name="docF" type="file" accept=".pdf" required style="width: 50%;">
+                                            <br>
+                                            <button type="submit">Confirmar</button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     {% endif %}
@@ -154,4 +197,9 @@
             </script>
             <script type="module" src="/static/crsApg.js"></script>
         {% endif %}
+        <script type="text/javascript">
+            const isFile = '{{isFile}}';
+        </script>
+        <script type="module" src="/static/crsPapg.js"></script>
     </body>
+</html>

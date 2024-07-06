@@ -75,15 +75,40 @@ body {
     scrollbar-width: 100%;
     float: right;
     overflow: hidden;
+    overflow-y: scroll;
 }
 
-.crsCntntList tr {
-    overflow-y: scroll;
+/* width */
+.crsCntntList::-webkit-scrollbar {
+    width: 10px;
+}
+  
+  /* Track */
+.crsCntntList::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px grey;
+    border-radius: 2px;
+}
+  
+  /* Handle */
+.crsCntntList::-webkit-scrollbar-thumb {
+    background: rgb(56, 56, 56);
+    border-radius: 5px;
 }
 
 .crsCntntList .list-group .list-group-item {
     background-color: rgb(211, 228, 233);
     border-radius: 0%;
+    width: 100%;
+}
+
+.crsCntntList a {
+    text-decoration: none;
+}
+
+.delbtncls {
+    position: absolute;
+    left: 80%;
+    top: 5%;
 }
 
 .mainCntList {
@@ -121,6 +146,26 @@ body {
     border: blue;
     border-radius: 0;
     width: 100%;
+}
+
+.docBw {
+    border: rgb(255, 41, 41) 2px solid;
+    background-color: rgb(233, 117, 128);
+    color: antiquewhite;
+    width: 40%;
+    height: 50px;
+    margin: 20px 5px;
+    display: block;
+}
+
+.docBw a {
+    display: block;
+    text-decoration: none;
+    color: antiquewhite;
+    font-size: 20px;
+    margin: 5px;
+    bottom: 55%;
+    cursor: pointer;
 }
 
 .popup-wrapper {
@@ -220,18 +265,4 @@ body {
     display: inline-block;
     height: 150px;
 
-}
-
-.DwBox {
-    border: rgb(255, 41, 41) 2px solid;
-    background-color: rgb(233, 117, 128);
-    color: antiquewhite;
-    width: 40%;
-    height: 30%;
-    position: absolute;
-    margin: 10px 10px;
-}
-
-.DwBox a {
-    color: rgb(255, 249, 242);
 }

@@ -1,8 +1,9 @@
 import os.path
 import mysql.connector
 import numpy
+import shutil
 from backend import dynamicHTMLS
-from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage 
+from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage
 from datetime import date, datetime
 from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_session import Session
@@ -26,9 +27,38 @@ db = mysql.connector.connect(
     password='root',
     database='medusrmain',
     raise_on_warnings = True,
+    connection_timeout = 30,
 )
 
-dbcursor = db.cursor(buffered=True) 
+dbcursor = db.cursor(buffered=True)
+dbcursor.execute("SET SESSION MAX_EXECUTION_TIME=1000")
+
+def sSRec():
+    print("Session is:", session["usr_id"])
+    return 0
+
+def dbRec():
+    if db.is_connected == False:
+        print("Attempting Reconnection...")
+        while db.is_connected() == False:
+            db.reconnect()
+    else: 
+        print("Database Connected")
+    return 0
+
+
+def ytEMB(Ylink:str):
+    if Ylink.startswith('https://www.youtube.com/watch?v=') == True or Ylink.startswith('youtube.com/watch?v=') == True:
+        Ycode = Ylink.split('=')[1]
+        newlink = 'https://www.youtube.com/embed/' + Ycode + '?'
+        return newlink
+    elif Ylink.startswith('https://www.youtube.com/live') == True or Ylink.startswith('youtube.com/live') == True:
+        Ycode = Ylink.split('live/')[1]
+        newlink = 'https://www.youtube.com/embed/' + Ycode + '?'
+        return newlink
+    else:
+        return Ylink
+
 
 def from_module_get(module_name, attr):
     return getattr(import_module(module_name), attr)
@@ -48,7 +78,7 @@ def find(haystack, needle):
 @isAdmin
 def mainPage():
     sessionUID = session.get("usr_id")
-    isAdmin = session.get("isAdmin", False) 
+    isAdmin = session.get("isAdmin", False)
     if sessionUID is not None:
         print(isAdmin)
         print(session["usr_id"])
@@ -58,7 +88,9 @@ def mainPage():
 @isAdmin
 @loginRequired
 def usrMainPage():
-    isAdmin = session.get("isAdmin", False) 
+    dbRec()
+    print(Session)
+    isAdmin = session.get("isAdmin", False)
     if isAdmin != True:
         # print("not admin")
         # print(isAdmin)
@@ -89,19 +121,68 @@ def adminMainPage():
 @loginRequired
 @isAdminPage
 def classMCreate():
-    # New Class
+    dbRec()
+    # New Class / Document
     clssTyp = request.form.get('type')
-    #print(clssTyp)
+
     if int(clssTyp) == 1: # 1 = Document/File
+        clssNmb = request.form.get('classN')
         course = request.form.get('course')
         clssFile = request.files['docF']
-        clssTitle = request.form.get('classtitle1')
-        clssDesc = request.form.get('clssDesc')
 
+        print(clssNmb)
         print(clssFile)
         print(clssFile.filename)
+
+        #SQL
+        dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (course,))
+        crsNM = dbcursor.fetchone()
+        crsNM = crsNM[0]
+
+        crsNMB = crsNM.replace(' ', '_')
+
+        dbcursor.execute("SELECT id FROM classes WHERE a_curs_id=%s AND c_a_id=%s", (course, clssNmb))
+        clssMn = dbcursor.fetchone()
+        clssMn = clssMn[0]
+
+        # Sudden folder switch
+        app.config['UPLOAD_FOLDER'] = 'static/assets/upload/cursos/{}'.format(crsNMB)
+        filename = secure_filename(clssFile.filename)
+        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        objname = 'Mclass_{}'.format(clssMn)
+
+        with open('static/assets/upload/cursos/{}/{}.py'.format(crsNMB, crsNMB), "r+") as file:
+            fileR = file.readlines(0)
+            file.seek(0)
+            for i in fileR:
+                if objname not in i:
+                    print('NOT IN I')
+                    print('obj: \n', objname)
+                    print('I: \n', i)
+                    file.write(i)
+                elif objname in i:
+                    iNew = i.replace("False", "True")
+                    iNew = iNew[:-1]
+                    iNew = iNew + ', "{}")'.format(filename)
+                    print('LINE OLD:', i)
+                    print('LINE NEW:', iNew)
+                    file.write(iNew)
+            file.truncate()
+
+        return redirect("/coursePgRdr/{}/1".format(course))
+
+    elif int(clssTyp) == 0: # 0 = Link
+        course = request.form.get('course')
+        clssLink = request.form.get('link')
+        clssTitle = request.form.get('classtitle0')
+        clssFile = request.files['docF']
+
+        clssLink = ytEMB(clssLink)
+
+        print(clssLink)
         print(clssTitle)
-        print(clssDesc)
+
 
         #SQL
 
@@ -122,7 +203,7 @@ def classMCreate():
         c_a_idC = int(c_a_idC[0])
 
         dbcursor.execute(
-            "INSERT INTO classes (a_id, c_a_id, cntnt, a_name, a_curs_id) VALUES(%s, %s, %s, %s, %s)", 
+            "INSERT INTO classes (a_id, c_a_id, cntnt, a_name, a_curs_id) VALUES(%s, %s, %s, %s, %s)",
             (
                 a_idC + 1,
                 c_a_idC + 1,
@@ -139,44 +220,84 @@ def classMCreate():
         idenC = dbcursor.fetchall()
         idenC = idenC[0]
 
-        # Sudden folder switch
-        app.config['UPLOAD_FOLDER'] = 'static/assets/upload/cursos/{}'.format(crsNMB)
         filename = secure_filename(clssFile.filename)
-        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        print('YOURE LOOKING FOR ME:', filename)
 
-        file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
-        file.write('\n\nMclass_{} = ClssCnt(True, "{}")'.format(idenC[0], filename)) # now hopefully this directs classes to take this path inside this py file as their document/content, hopefully 
-        file.close()
+        if (filename == None or filename == ''):
+            file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
+            file.write('\n\nMclass_{} = ClssCnt(False, "{}")'.format(idenC[0], clssLink))
+            file.close()
+        else:
+            clssFile.save(os.path.join('static/assets/upload/cursos/{}'.format(crsNMB), filename))
 
-        return redirect("/coursePgRdr/{}".format(course))
-     
-    elif int(clssTyp) == 0: # 0 = Link
-        pass
+            file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
+            file.write('\n\nMclass_{} = ClssCnt(True, "{}", "{}")'.format(idenC[0], clssLink, filename))
+
+        return redirect("/coursePgRdr/{}/1".format(course))
+    
     else:
         return '????'
-    
+
 @app.route("/classMDel", endpoint="class_m_del", methods=["POST"])
 @loginRequired
 @isAdminPage
 def classMDel():
+    classI = request.form['id']
     # List
     # 1 - DELETE MYSQL ROW
+    dbcursor.execute("SELECT * FROM classes WHERE id=%s", (classI,))
+    idE = dbcursor.fetchone()
+    idE_ac = idE[2]
+    print(len(idE))
+
+    if len(idE) > 0:
+        dbcursor.execute("DELETE FROM classes WHERE id=%s", (classI,))
     # 2 - REALIGN ROWS
+        dbcursor.execute("UPDATE classes SET a_id = a_id - 1 WHERE a_id > %s", (idE_ac,))
+        dbcursor.execute("UPDATE classes SET c_a_id = c_a_id - 1 WHERE c_a_id > %s", (idE_ac,))
+        db.commit()
     # 3 - DELETE FILES ?
+        idE_cN = str(idE[3][:-3])
+
+        module_name = "static.assets.upload.cursos.{}.{}".format(idE_cN, idE_cN)
+        objname = 'Mclass_{}'.format(idE[0])
+        module = from_module_get(module_name, objname)
+
+        if module.file == True:
+            fileC = os.path.isfile('static/assets/upload/cursos/{}/{}'.format(idE_cN, module.doc))
+            if fileC == True:
+                os.remove('static/assets/upload/cursos/{}/{}'.format(idE_cN, module.doc))
+            else:
+                return "File Deletion Failed : {}, {}, {}".format(objname, module.file, module.doc)
+
     # 4 - DELETE FROM PY FILE
-    pass
+        with open('static/assets/upload/cursos/{}/{}.py'.format(idE_cN, idE_cN), "r+") as file:
+            fileR = file.readlines(0)
+            file.seek(0)
+            hasF = False # So we dont have blank spaces in the course py file // Frontend now finally
+            for i in fileR:
+                if hasF == False:
+                    if objname not in i:
+                        file.write(i)
+                    else:
+                        hasF = True
+                else:
+                    hasF = False
+            file.truncate()
+    return "OK"
 
 @app.route("/coursMEdit", endpoint="cours_m_edit", methods=["POST"])
 @loginRequired
 @isAdminPage
 def coursMEdit():
+    dbRec()
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsProfs = request.form['prof']
     newCrsPrices = request.form['price']
     # print('data: ' + CsrIds)
 
-    dbcursor.execute("UPDATE curso SET cur_name = %s, prof = %s, curs_price = %s WHERE curs_id = %s", 
+    dbcursor.execute("UPDATE curso SET cur_name = %s, prof = %s, curs_price = %s WHERE curs_id = %s",
         (
             newCrsNames,
             newCrsProfs,
@@ -185,12 +306,13 @@ def coursMEdit():
         )
     )
     db.commit()
-    return redirect("/coursMList") 
+    return redirect("/coursMList")
 
 @app.route("/coursMList", endpoint="cours_m_list", methods=["GET"])
 @loginRequired
 @isAdminPage
 def coursMList():
+    dbRec()
     dbcursor.execute("SELECT * FROM curso")
     cursos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM curso")
@@ -200,8 +322,9 @@ def coursMList():
 
 @app.route("/coursMCreate", endpoint="cours_m_create", methods=["POST"])
 @loginRequired
-#@isAdminPage
+@isAdminPage
 def coursMCreate():
+    dbRec()
     # Criar curso por function Sendo que Só admin pode criar
     # Ao mesmo tempo que vai criar o curso no databank tem que criar um html do curso
     # Tem que deixar eles editarem tudo sobre o curso tbm :/
@@ -210,14 +333,12 @@ def coursMCreate():
     newCrsProfs = request.form.getlist("NcrsProf")
     newCrsPrices = request.form.getlist("NcrsPrice")
 
-    print(newCrsNames)
-
     if newCsrIds == None or newCsrIds == '':
         return pageApology("None type detection", 400)
     if newCrsNames == None or newCrsNames == '':
         return pageApology("None type detection", 400)
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
-    
+
     try:
         for i, name in enumerate(newCrsNames):
             if (name == ''):
@@ -229,13 +350,13 @@ def coursMCreate():
 
                 checkF = os.path.isdir('templates/cursos/curpages/{}'.format(nameB))
                 checkF1 = os.path.isdir('static/assets/upload/cursos/{}'.format(nameB))
-                    
-                dbcursor.execute("SELECT * FROM curso WHERE cur_name=%s", (name,))
-                chkCrsEx = dbcursor.fetchall()
-                
-                if (len(chkCrsEx) < 1):
+
+                dbcursor.execute("SELECT cur_name FROM curso WHERE cur_name=%s", (name,))
+                chkCrsEx = dbcursor.fetchone()
+
+                if chkCrsEx is None or (len(chkCrsEx) < 1):
                     dbcursor.execute(
-                        "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)", 
+                        "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)",
                         (
                             newCsrIds[i],
                             name,
@@ -254,10 +375,10 @@ def coursMCreate():
                     file.write(dynamicHTMLS.exHtml)
                 if (checkF1 == False):
                     os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
-                    file = open('static/assets/cursos/{}/{}.py'.format(nameB, nameB), "x")
-                    file.write("from clssType import ClssCnt \n")
+                    file = open('static/assets/upload/cursos/{}/{}.py'.format(nameB, nameB), "x")
+                    file.write("from backend.clssType import ClssCnt \n")
 
-                
+
             # Now we need to do the same But this time we will be creating TABLES for the courses
             # Each TABLE will have Classes which hold the links to their courses content, god this sucks
             # now we are gonna need to remake that file system to also make folders each for a course that gets added
@@ -271,10 +392,17 @@ def coursMCreate():
 
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
-@loginRequired  
-#@isAdminPage
+@loginRequired
+@isAdminPage
 def deleteCourse():
+    dbRec()
     id = request.form.get("id")
+
+    dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s", (id,))
+    clsEX = dbcursor.fetchone()
+
+    dbcursor.execute("DELETE FROM classes WHERE a_curs_id=%s", (id,))
+    db.commit()
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (id,))
     curNM = dbcursor.fetchone()
@@ -294,13 +422,24 @@ def deleteCourse():
 
     checkF = os.path.isdir('templates/cursos/curpages/{}'.format(curNMB))
     if (checkF == True):
-        os.rmdir('templates/cursos/curpages/{}'.format(curNMB))
+        shutil.rmtree('templates/cursos/curpages/{}'.format(curNMB), ignore_errors=True)
+
+    checkF = os.path.isdir('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]))
+    if (checkF == True):
+        shutil.rmtree('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]), ignore_errors=True)
 
     return redirect("/coursMList")
 
-@app.route("/coursePgRdr/<course>", endpoint="cours_redir_pg", methods=["GET"])
+@app.route("/coursePgRdr/<course>/<clss>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
-def coursePgRdr(course, clss = 1):
+def coursePgRdr(course, clss:1):
+    dbRec()
+    if session["isAdmin"] == False:
+        dbcursor.execute("SELECT * FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", (course, session["usr_id"]))
+        chkU = dbcursor.fetchone()
+        chkU = chkU # Check later if its necessary but just to avoid mysql delaying stuff
+        if chkU is None:
+            return redirect("/usrMainPage")
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
     crsName = dbcursor.fetchone()
@@ -317,7 +456,6 @@ def coursePgRdr(course, clss = 1):
         aulas = dbcursor.fetchall()
         aulas = aulas # fixes the bug for deleted classes still appearing
 
-        #return render_template("/cursos/curpages/DefaultCurTMP.html", crsName=crsName)
         if (len(clssCNT) > 0):
             clssCNT = clssCNT[0]
 
@@ -326,14 +464,17 @@ def coursePgRdr(course, clss = 1):
 
             module = from_module_get(module_name, objname)
 
-            fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, module.content)
+            fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, module.doc)
 
-            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, isFile=module.file, cPath=module.content, fPath=fPath)
+            if (module.file == True):
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, fPath=fPath)
+            else:
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content)
         else:
             return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course)
     else:
         return render_template("/cursos/curpages/curNoN.html")
-        
+
 
 
 # Login
@@ -349,7 +490,7 @@ def login():
             return pageApology("Falta Email", 400)
         elif not f_password:
             return pageApology("Falta Senha", 400)
-        
+
         # Check if Account Exists
         d_current_status = dbcursor.execute(
             "SELECT user_email FROM user WHERE user_email = %s", (
@@ -384,31 +525,41 @@ def login():
                 return pageApology("invalid username and/or password", 400)
             else:
                 pass
-            
+
             # Remember user
             session["usr_id"] = row[0]
+            session["email"] = row[2]
 
             return redirect("/")
-        
+
 
     else:
         return render_template("login.html")
-    
+
 ## ADMIN REGISTER EDIT USER FUNCTIONS ##
-    
+
 @app.route("/usrMList", endpoint="usr_m_list", methods=["GET"])
 @loginRequired
 @isAdminPage
 def usrMList():
-
-    dbcursor.execute("SELECT * FROM user")
-    alunos = dbcursor.fetchall()
-    dbcursor.execute("SELECT COUNT(*) FROM user")
-    alunoC = dbcursor.fetchall()
-    dbcursor.execute("SELECT cur_name, curs_id FROM curso")
-    cursosN = dbcursor.fetchall()
-    dbcursor.execute("SELECT * FROM curso_check ORDER BY cc_curs_id")
-    varDCC = dbcursor.fetchall()
+    print("CONNECTION IS : ", db.is_connected())
+    try:
+        dbcursor.execute("SELECT * FROM user")
+        alunos = dbcursor.fetchall()
+        dbcursor.execute("SELECT COUNT(*) FROM user")
+        alunoC = dbcursor.fetchall()
+        dbcursor.execute("SELECT cur_name, curs_id FROM curso")
+        cursosN = dbcursor.fetchall()
+        dbcursor.execute("SELECT * FROM curso_check ORDER BY cc_curs_id")
+        varDCC = dbcursor.fetchall()
+    except Exception as e:
+        print("commit failure attempting reconnection.")
+        db.reconnect(attempts=100)
+        print(e)
+        if db.is_connected() == False:
+            print("Reconnection failed.")
+        else:
+            print("Database RECONECTED now to the cursor")
     # dbcursor.execute("SELECT curso.cur_name, user.usr_id FROM curso LEFT JOIN curso_check ON curso.curs_id=curso_check.cc_curs_id INNER JOIN user ON curso_check.cc_usr_id=user.usr_id WHERE curso_check.cc_usr_id = user.usr_id")
     # acursos = dbcursor.fetchall()
     return render_template("alunoGrnc.html", alunos=alunos, alunoC=alunoC, cursosN=cursosN, varDCC=varDCC)
@@ -424,15 +575,16 @@ def aUsrReg():
     newUsrCPF = request.form.getlist("NusrCPF")
     newUsrNum = request.form.getlist("NusrNum")
 
-    if newUsrIds == None or newUsrIds == '':
+    if newUsrIds == None or newUsrIds == ['']:
         return pageApology("None type detection", 400)
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
-    
+
     try:
         for i, name in enumerate(newUsrNames):
-            print("newIDS : {}".format(newUsrIds[i]))
+            print('newIDS : {}'.format(newUsrIds[i]))
+            print('newEMAILS: {}'.format({newUsrEmail[i]}))
             dbcursor.execute(
-                "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     newUsrIds[i],
                     name,
@@ -448,8 +600,15 @@ def aUsrReg():
             )
         db.commit()
     except Exception as e:
+        print("commit failure attempting reconnection.")
+        db.reconnect(attempts=100)
         print(e)
-        print("commit.")
+        if db.is_connected() == False:
+            print("Reconnection failed.")
+        else:
+            print("Database RECONECTED now to the cursor")
+    finally:
+        dbcursor.close()
     return redirect("/usrMList")
 
 
@@ -462,13 +621,13 @@ def usrCRSreg():
     id = request.form.get('id').split(',')
     detN = request.form['detNmb']
     if int(detN) == 1:
-        
+
         # print("curs = " + (id[0]))
         # print("usr = " + (id[1]))
-    
+
         # print("ADD USR_CRS REQUEST BY USER " + str(session["usr_id"]))
 
-        dbcursor.execute("SELECT COUNT(*) FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", 
+        dbcursor.execute("SELECT COUNT(*) FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s",
             (id[0], id[1])
         )
         checkCRSreg = dbcursor.fetchone()[0]
@@ -476,8 +635,8 @@ def usrCRSreg():
             print("usr registered?")
             print(checkCRSreg)
             return ("user already registered into course (HOW???????????)")
-        
-        dbcursor.execute("INSERT INTO curso_check (cc_curs_id, cc_usr_id) VALUES(%s, %s)", 
+
+        dbcursor.execute("INSERT INTO curso_check (cc_curs_id, cc_usr_id) VALUES(%s, %s)",
             (id[0], id[1])
         )
         db.commit()
@@ -485,7 +644,7 @@ def usrCRSreg():
 
         # print("DEL USR_CRS REQUEST BY USER " + str(session["usr_id"]))
 
-        dbcursor.execute("SELECT COUNT(*) FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", 
+        dbcursor.execute("SELECT COUNT(*) FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s",
             (id[0], id[1])
         )
         checkCRSreg = dbcursor.fetchone()[0]
@@ -493,8 +652,8 @@ def usrCRSreg():
             print("usr not registered?")
             print(checkCRSreg)
             return ("user not registered into course (HOW???????????)")
-        
-        dbcursor.execute("DELETE FROM curso_check WHERE cc_curs_id = %s AND cc_usr_id = %s", 
+
+        dbcursor.execute("DELETE FROM curso_check WHERE cc_curs_id = %s AND cc_usr_id = %s",
             (id[0], id[1])
         )
         db.commit()
@@ -505,6 +664,7 @@ def usrCRSreg():
 @isAdmin
 @isAdminPage
 def deleteUser():
+    dbRec()
     detN = int(request.form['detNmb'])
     if detN == 0:
         id = request.form.get("id")
@@ -530,6 +690,10 @@ def deleteUser():
             db.commit()
             dbcursor.execute("DELETE FROM user WHERE usr_id = %s", (( number,)))
             db.commit()
+        if session["usr_id"] in idray:
+            session.clear()
+        else:
+            print("session is not in idray")
         dbcursor.execute("SELECT COUNT(*) FROM user")
         curcount = dbcursor.fetchone()
         curcount = int(curcount[0])
@@ -544,7 +708,7 @@ def deleteUser():
             db.commit()
             curcount += 1
         return redirect("/usrMList")
-    
+
 
 # NOT DONE supposed to log out users who have been deleted to avoid further errors in database
 # and also avoid stuff like people logging into old ids (scary)
@@ -559,7 +723,7 @@ def sndLogoutRq(id, detnmb = False):
             print(ids)
             print(session.get(ids))
             dbcursor.execute("SELECT * FROM user WHERE usr_id=%s AND active_status=1", ((ids,)))
-            usr = dbcursor.fetchall()        
+            usr = dbcursor.fetchall()
             print('logging {} out'.format(ids))
             session.get(ids)
 
@@ -567,6 +731,7 @@ def sndLogoutRq(id, detnmb = False):
 @loginRequired
 @isAdminPage
 def AuserMEdit():
+    dbRec()
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsEmail = request.form['email']
@@ -575,7 +740,7 @@ def AuserMEdit():
     newCrsnums = request.form['num']
     # print('data: ' + CsrIds)
 
-    dbcursor.execute("UPDATE user SET username = %s, user_email = %s, password = %s, cpf = %s, contact_number = %s WHERE usr_id = %s", 
+    dbcursor.execute("UPDATE user SET username = %s, user_email = %s, password = %s, cpf = %s, contact_number = %s WHERE usr_id = %s",
         (
             newCrsNames,
             newCrsEmail,
@@ -586,7 +751,7 @@ def AuserMEdit():
         )
     )
     db.commit()
-    return redirect("/usrMList") 
+    return redirect("/usrMList")
 
 
 
@@ -597,7 +762,9 @@ def AuserMEdit():
 @app.route("/register", methods=["GET", "POST"])
 def register():    
     if request.method == "POST":
-
+        dbcursor.execute("SELECT COUNT(usr_id) FROM user")
+        uCnt = dbcursor.fetchone()
+        uCnt = uCnt[0]
         # Variables for making it easier to type
         f_username = request.form.get("username")
         f_password = request.form.get("password")
@@ -641,8 +808,9 @@ def register():
             else:
                 # Start storing User into database (db)
                     dbcursor.execute(
-                        "INSERT INTO user (username, password, cpf, user_email, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)",
+                        "INSERT INTO user (usr_id, username, password, cpf, user_email, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                             (
+                                uCnt + 1,
                                 f_username,
                                 f_password,
                                 f_CPF,
@@ -655,8 +823,6 @@ def register():
                         )
                     db.commit()
                     return redirect("/")
-
-    
     # GET
     else:
         return render_template("register.html")
