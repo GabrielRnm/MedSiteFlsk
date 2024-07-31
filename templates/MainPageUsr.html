@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block main %}
-    <div class="curso_showcase">
+    <div class="curso_showcase container py-5 text-center">
     {% if curso is not none %}
         {% for curso in cursos %}
                     <a class="cursolinked" id="acurso"href="{{ url_for('cours_redir_pg', course=curso[0], clss=1) }}">

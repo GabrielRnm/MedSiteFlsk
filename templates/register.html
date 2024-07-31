@@ -6,7 +6,7 @@
 
 {% block main %}
 <form action="/register" method="post">
-    <div class="mb-3">
+    <div class="regFC mb-3">
         <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Nome Completo" type="text">
         <br>
         <input class="form-control mx-auto w-auto" name="email" placeholder="E-mail" type="email">
@@ -22,8 +22,13 @@
         <input autocomplete="off" class="form-control mx-auto w-auto" name="confirmation" placeholder="Repita Sua Senha" type="password">
     </div>
     <br>
-    <button class="btn btn-primary" type="submit">Cadastre-se</button>
+    <div class="regBtnC">
+        <button class="btn btn-primary" type="submit">Cadastre-se</button>
+    </div>
 </form>
 <br>
-<a href="login" style="text-decoration: none; color: white;" class="btn btn-primary">Já Possui Conta?</a>
+<div class="regBtnC marg">
+    <a href="login" style="text-decoration: none; color: white;" class="btn btn-primary">Já Possui Conta?</a>
+</div>
+<br>
 {% endblock %}

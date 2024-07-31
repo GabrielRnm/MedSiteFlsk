@@ -18,57 +18,69 @@
         <link href="/static/assets/images/medmentoryicon_icon.ico" rel="icon">
 
         <link href="/static/styles.css" rel="stylesheet">
-
+        
         <title>{% block title %}{% endblock %}</title>
         {% block head %}{% endblock %}
 
     </head>
     <body>
-        <div class="header">
-            <a href="/" id="logolink">
-                <img class="smalltxtimg" draggable="false" src="/static/assets/images/medmentorylogo.jpeg">
-            </a>
-            <ul class="logregoutbox list-group list-group-flush list-group-horizontal">
-                <div class="hbar">
-                    <ul class="list-group list-group-horizontal d-flex justify-content-center">
-                        <a href="/" tabindex="1">
-                            <span class="barO list-group-item rounded-0">Home</span>
-                        </a>
-                        <a href="/" tabindex="2">
-                            <span class="barO list-group-item rounded-0">Cursos</span>
-                        </a>
-                        <a href="/" tabindex="3">
-                            <span class="barO list-group-item rounded-0">Diferenciais</span>
-                        </a>
-                        <a href="/" tabindex="4">
-                            <span class="barO list-group-item rounded-0">Depoimentos</span>
-                        </a>
-                        <a href="/" tabindex="5">
-                            <span class="barO list-group-item rounded-0">Contatos</span>
-                        </a>
-                    </ul>
-                </div>
-                <div class="loginStuff">
-                {% if session["usr_id"] %}
-                    <a href="/logout" style="text-decoration: none;"><li class="list-group-item">Sair</li></a>
-                    <a href="/usrMainPage" style="text-decoration: none;"><li class="list-group-item">Página do Estudante</li></a>
-                {% else %}
-                    <a href="/login" style="text-decoration: none;"><li class="list-group-item">Entrar</li></a>
-                    <a href="/register" style="text-decoration: none;"><li class="list-group-item">Cadastre-se</li></a>
-                {% endif %}
+        <div class="container">
+            <div class="header">
+                <a href="/" id="logolink">
+                    <img class="smalltxtimg" draggable="false" src="/static/assets/images/medmentorylogo.jpeg">
+                </a>
+                <ul class="logregoutbox list-group list-group-flush list-group-horizontal">
+                    <div class="hbar">
+                        <ul class="mPgbr list-group list-group-horizontal d-flex justify-content-center">
+                            <a href="/" tabindex="1">
+                                <span class="barO list-group-item rounded">Home</span>
+                            </a>
+                            <a tabindex="2" class="CrsBtn">
+                                <span class="barO list-group-item rounded">Cursos</span>
+                            </a>
+                            <a href="#Diferenciais" tabindex="3">
+                                <span class="barO list-group-item rounded">Diferenciais</span>
+                            </a>
+                            <a href="/" tabindex="4">
+                                <span class="barO list-group-item rounded">Depoimentos</span>
+                            </a>
+                            <a href="#Contatos" tabindex="5">
+                                <span class="barO list-group-item rounded">Contatos</span>
+                            </a>
+                        </ul>
+                    </div>
+                    <div class="loginStuff">
+                    {% if session["usr_id"] %}
+                        {#
+                        <a href="/logout" style="text-decoration: none;"><li class="list-group-item">Sair</li></a>
+                        <a href="/usrMainPage" style="text-decoration: none;"><li class="list-group-item">Página do Estudante</li></a>
+                        #}
+                        <div class="userBtnC">
+                            <a class="userBtn btn btn-primary" href="usrMainPage">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="userMi bi bi-person-lines-fill" viewBox="0 0 16 16">
+                                    <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
+                                </svg>
+                                Área do Estudante
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="/login" style="text-decoration: none;"><li class="list-group-item rounded">Entrar</li></a>
+                        <a href="/register" style="text-decoration: none;"><li class="list-group-item rounded">Cadastre-se</li></a>
+                    {% endif %}
+                    {% if session["isAdmin"] %}
+                        <a href="/adminMainPage" style="text-decoration: none;" class="btn" id="admButton">ADMIN</a>
+                    </div>
+                    {% endif %}
+                </ul>
+                {#
                 {% if session["isAdmin"] %}
-                    <a href="/adminMainPage" style="text-decoration: none;"><li class="list-group-item" id="admButton">ADMIN</li></a>
-                </div>
+                    <div class="Adminheader">ADMIN</div>
                 {% endif %}
-            </ul>
-            {% if session["isAdmin"] %}
-                <div class="Adminheader">ADMIN</div>
-            {% endif %}
+                #}
+            </div>
         </div>
-        <main class="container py-5 text-center">
-            <main class="mainwrapper">
+        <main style="width: 100%;">
                 {% block main %}{% endblock %}
-            </main>
         </main>
         <footer class="footer">
             <div class="container" id="footerContainer1">
@@ -89,6 +101,7 @@
 
             </div>
         </footer>
+        <script src="/static/curBtnS.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     </body>
 

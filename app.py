@@ -84,6 +84,15 @@ def mainPage():
         print(session["usr_id"])
     return render_template("index.html", isAdmin=isAdmin)
 
+@app.route("/aPages/<type>")
+@isAdmin
+def advPage(type):
+    try:
+        return render_template('{}.html'.format(type))
+    except Exception as e:
+        print(e)
+        return redirect("/")
+
 @app.route("/usrMainPage")
 @isAdmin
 @loginRequired

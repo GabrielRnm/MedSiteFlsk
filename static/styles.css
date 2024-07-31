@@ -1,24 +1,30 @@
-
+html {
+    position: relative;
+    min-height: 100%;
+    -ms-zoom: 50%;
+}
 
 body
 {
-    background-color: white
+    background-color: white;
+    margin-bottom: 183pt;
 }
+
 
 footer
 {
     display: block;
-    position: relative;
+    position: absolute;
     width: 100%;
     background-color: rgb(4, 177, 174);
-    margin-top: 100px;
     padding-bottom: 8rem;
+    bottom: 0px;
 }
 
 h3
 {
     font-weight: bold;
-    font-size: 24px;
+    font-size: 24pt;
     font-family: 'Montserrat';
 }
 
@@ -36,11 +42,7 @@ h3
     position: relative;
     font-family: Arial, Helvetica, sans-serif;
     min-height: 100%;
-}
-
-.mainwrapper
-{
-    padding-bottom: 2.5rem
+    width: 100%;
 }
 
 .header 
@@ -67,17 +69,43 @@ h3
 {
     position: relative;
     display: contents;
-    width: 130px;
+
+    cursor: pointer;
+}
+
+.advPnls{
+    width: 100%;
+    margin: 0 0;
+}
+
+.advPnls img {
+    width: 100%;
 }
 
 .hbar
 {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     display: flex; 
-    position: relative;
-    right: 30%;
-    width: 37.2%;
+    position: absolute;
+    right: 250pt;
+    width: fit-content;
     margin: 0 0;
-    z-index: 1;
+}
+
+.mPgbr .list-group-item {
+    margin: 0 10px;
+    font-weight: bold;
+}
+
+.userMi {
+    margin: 5px;
+}
+
+.userBtn {
+    display: flex;
+    align-items: center;
+    background-color: rgb(30,13,84);
+    border-color: transparent;  
 }
 
 .hbar a .list-group-item
@@ -88,23 +116,25 @@ h3
     box-sizing: content-box;
 }
 
-.hbar a .list-group-item:hover
-{
-    background-color: rgba(19, 100, 206, 0.5);
+.CrsBtn :hover {
+    cursor: pointer;
 }
 
 .logregoutbox
 {
     position: absolute;
     bottom: 120%;
+    width: 85%;
+    left: 16%;
 }
 
 .logregoutbox .list-group-item
 {   
     color: white;
     background: none;
-    background-color: rgba(235, 64, 64, 0.5);
+    background-color: rgb(30,13,84);
     border: transparent;
+    margin: 0 10px;
 }
 
 .loginStuff
@@ -112,6 +142,19 @@ h3
     display: flex;
     justify-content: center;
     position: relative;
+}
+
+.regFC {
+    margin: 20px 0;
+}
+
+.regBtnC {
+    display: flex;
+    justify-content: center;
+}
+
+.regBtnC.marg {
+    margin-bottom: 50pt;
 }
 
 .Adminheader
@@ -130,6 +173,7 @@ h3
 
 #admButton
 {
+    margin: 0 5px;
     background-color: tomato;
     font-weight: bold;
 }
@@ -172,6 +216,7 @@ h3
 .barO
 {
     background: none;
+    border-radius: 20%;
 }
 
 .barO:hover
@@ -186,6 +231,300 @@ h3
     height: 140%;
     margin-right: 5px;
     user-select: none;
+}
+
+.adScr {
+    margin-top: 2%;
+    display: flex;
+    height: 450px;
+}
+
+.adScr .h1D {
+    display: block;
+    width: 25%;
+    height: 80%;
+    margin: 0 7%;
+    /*border: #050A30 solid 2px;*/
+}
+
+.adScr .h1D h1 {
+    font-weight: bold;
+    color: #050A30;
+    line-height: 1;
+    height: 72%;
+    font-size: 58pt;
+    margin: 0 0;
+    user-select: none;
+    /*border: green solid 2px;*/
+}
+
+.adScr .h1D .s1D {
+    text-align: center;
+    margin: 0 0;
+    height: 29%;
+    width: 100%;
+    /*border: blue solid 2px;*/
+}
+
+.s1D p {
+    margin: 0 0;
+}
+
+.adScr .h2D {
+    user-select: none;
+    display: inline-block;
+    margin-left: auto;
+    margin-top: 40px;
+    margin-right: 10%;
+    position: relative;
+    /*border: #050A30 solid 2px;*/
+    height: 80%;
+    width: 46%;
+}
+
+.adScr .h2D img {
+    object-fit: cover;
+    object-position: 10% 80%;
+    height: 100%;
+    width: 100%;
+}
+
+.tEScr {
+    text-align: center;
+    background-color: #5CB9B4;
+    margin: 0 0;
+    height: 390pt;
+    overflow-wrap: break-word;
+}
+
+.tEScr h2 {
+    font-size: 35pt;
+    display: block;
+    color: #50204D;
+}
+
+.tEScr p {
+    font-weight: bold;
+    margin: 0 0;
+    font-size: 14.8pt;
+}
+
+.mdScr {
+    height: 500px;
+}
+
+.mdScr h2 {
+    width: 30%;
+    margin: 2% auto;
+    text-align: center;
+    text-wrap: balance;
+    color: #FD288D;
+    font-size: 30pt;
+    font-weight: bold;   
+}
+
+.mdScr p {
+    font-size: 13pt;
+    font-weight: bold;
+    margin:auto;
+    width: 50%;
+    color: #1A3F3E;
+}
+
+.difad {
+    border: #5b6eff;
+    border-top: 5%;
+    text-align: center;
+    height: 400pt;
+}
+
+.difad h2 {
+    margin: 2% 0;
+    color: #FD288D;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.difBOXwr {
+    margin: 2% 0;
+    display: flex;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    overflow-x: auto;
+}
+
+.difBOX {
+    height: 100%;
+    width: 150pt;
+    border: green 2px;
+    margin: auto 5%;
+}
+
+.circC {
+    align-content: center;
+    justify-content: center;
+    width: 150pt;
+}
+
+.difPc {
+    fill: #FD288D;
+    height: 120px;
+    width: 120px;
+}
+
+.difBOX h3 { 
+    font-weight: bolder;
+    font-size: xx-large;
+}
+
+.smallBR {
+    display: block; /* makes it have a width */
+    content: ""; /* clears default height */
+    margin-top: 10px; /* change this to whatever height you want it */
+}
+
+.difBOX p {
+    font-size: 14px;
+    border: blue 1px;
+}
+
+.aprAd {
+    height: 380pt;
+    background-color: black;
+    border: green solid;
+    margin:0 0;
+}
+
+.aprAd h2{
+    text-align: center;
+    color: #FD288D;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.depAd {
+    margin: 0 0;
+    height: 500pt;
+    background-color: #2B1821;
+}
+
+.depAd div h2 {
+    background-color: #2B1821;
+    margin: 0 auto;
+    margin-bottom: 5%;
+    text-align: center;
+    color: #FD288D;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.depAd .contDepH {
+    border: #FD288D;
+}
+
+.depAd .container {
+    border: pink solid;
+}
+
+.depBoxWr {
+    border: yellow solid;
+    height: calc(100% - 40%);
+    display: flex;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 2%;
+    align-items: center;
+    justify-content: center;
+}
+
+.depbox {
+    
+    margin: 0 2%;
+    border-radius: 5%;
+    width: 300px;
+    height: 80%;
+    border: green solid;
+}
+
+.dep {
+    width: 100%;
+    border: white solid 1px;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.dep .dWr{
+    height: 80%;
+    margin: 5% 5%;
+    width: 90%;
+    font-size: large;
+}
+
+.dTxt {
+    color: white;
+    white-space: normal;
+}
+
+.dCred {
+    white-space: normal;
+    color: #FD288D;
+    font-weight: bold;
+}
+
+.cntct {
+    height: 500px;
+    border: transparent solid 1px;
+    background: linear-gradient(to right, rgb(0, 0, 0), rgb(0, 0, 0), rgb(114, 55, 138), rgb(221, 75, 119), rgb(0, 0, 0));
+    animation: gradient 4s alternate infinite;
+}
+
+.cntct h2 {
+    color: #FD288D;
+    font-size: 40px;
+    font-weight: bold;
+    margin: 0 5%;
+    margin-top: 10%;
+}
+
+.cntL {
+    margin: 1% 6%;
+}
+
+.cntTtl {
+    color: #FD288D;
+    font-weight: bold;
+}
+
+.cnttxt {
+    color: white;
+}
+
+.cnttxt svg{
+    color: #FD288D;
+}
+
+.WrapSlCrs {
+    height: 500px;
+    border-image: linear-gradient(to right, white 5%, gray 50%, white 95%) 1;
+    border-style: solid;
+    display: flex;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 2%;
+    align-items: center;
+    justify-content: center;
+}
+
+.CrsSel {
+    height: 70%;
+    width: 40%;
+    margin: 10% 5%;
+    border: gray solid;
+    border-radius: 10%;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes gradient {

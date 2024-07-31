@@ -6,15 +6,20 @@
 
 {% block main %}
 <form action="/login" method="post">
-    <div class="mb-3">
+    <div class="regFC mb-3">
         <input class="form-control mx-auto w-auto" name="email" placeholder="E-mail" type="email">
         <br>
         <input autocomplete="off" class="form-control mx-auto w-auto" name="password" placeholder="Senha" type="password">
         <br>
     </div>
     <br>
-    <button class="btn btn-primary" type="submit">Entrar</button>
+    <div class="regBtnC">
+        <button class="btn btn-primary" type="submit">Entrar</button>
+    </div>
 </form>
 <br>
-<a href="register.html" style="text-decoration: none; color: white;" class="btn btn-primary">Registrar-se</a>
+<div class="regBtnC marg">
+    <a href="register.html" style="text-decoration: none; color: white;" class="btn btn-primary">Registrar-se</a>
+</div>
+<br>
 {% endblock %}
