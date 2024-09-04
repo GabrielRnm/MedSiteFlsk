@@ -3,6 +3,7 @@ import mysql.connector
 import numpy
 import shutil
 from backend import dynamicHTMLS
+from backend.connection import connect_to_mysql
 from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage
 from datetime import date, datetime
 from flask import Flask, flash, redirect, render_template, request, url_for, session
@@ -20,18 +21,21 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.config['UPLOAD_FOLDER'] = 'static/assets/upload'
 Session(app)
 
+config = {
+    "user": 'root',
+    "password": 'root',
+    "database": 'medusrmain',
+    "raise_on_warnings": True,
+    "connection_timeout": 1200000,
+}
 
 # Database connection
-db = mysql.connector.connect(
-    user='root',
-    password='root',
-    database='medusrmain',
-    raise_on_warnings = True,
-    connection_timeout = 30,
-)
+db = connect_to_mysql(config)
 
 dbcursor = db.cursor(buffered=True)
-dbcursor.execute("SET SESSION MAX_EXECUTION_TIME=1000")
+dbcursor.execute("SET SESSION MAX_EXECUTION_TIME=30000")
+
+print(dbcursor)
 
 def sSRec():
     print("Session is:", session["usr_id"])
@@ -41,7 +45,7 @@ def dbRec():
     if db.is_connected == False:
         print("Attempting Reconnection...")
         while db.is_connected() == False:
-            db.reconnect()
+            db.connect()
     else: 
         print("Database Connected")
     return 0
@@ -489,6 +493,7 @@ def coursePgRdr(course, clss:1):
 # Login
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    dbRec()
     if request.method == "POST":
         # Variables for making it easier to type
         f_password = request.form.get("password")
@@ -551,26 +556,15 @@ def login():
 @loginRequired
 @isAdminPage
 def usrMList():
-    print("CONNECTION IS : ", db.is_connected())
-    try:
-        dbcursor.execute("SELECT * FROM user")
-        alunos = dbcursor.fetchall()
-        dbcursor.execute("SELECT COUNT(*) FROM user")
-        alunoC = dbcursor.fetchall()
-        dbcursor.execute("SELECT cur_name, curs_id FROM curso")
-        cursosN = dbcursor.fetchall()
-        dbcursor.execute("SELECT * FROM curso_check ORDER BY cc_curs_id")
-        varDCC = dbcursor.fetchall()
-    except Exception as e:
-        print("commit failure attempting reconnection.")
-        db.reconnect(attempts=100)
-        print(e)
-        if db.is_connected() == False:
-            print("Reconnection failed.")
-        else:
-            print("Database RECONECTED now to the cursor")
-    # dbcursor.execute("SELECT curso.cur_name, user.usr_id FROM curso LEFT JOIN curso_check ON curso.curs_id=curso_check.cc_curs_id INNER JOIN user ON curso_check.cc_usr_id=user.usr_id WHERE curso_check.cc_usr_id = user.usr_id")
-    # acursos = dbcursor.fetchall()
+    #dbRec()
+    dbcursor.execute("SELECT * FROM user")
+    alunos = dbcursor.fetchall()
+    dbcursor.execute("SELECT COUNT(*) FROM user")
+    alunoC = dbcursor.fetchall()
+    dbcursor.execute("SELECT cur_name, curs_id FROM curso")
+    cursosN = dbcursor.fetchall()
+    dbcursor.execute("SELECT * FROM curso_check ORDER BY cc_curs_id")
+    varDCC = dbcursor.fetchall()
     return render_template("alunoGrnc.html", alunos=alunos, alunoC=alunoC, cursosN=cursosN, varDCC=varDCC)
 
 @app.route("/aUsrReg", endpoint="ausr_reg", methods=["POST"])
@@ -589,24 +583,30 @@ def aUsrReg():
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
 
     try:
-        for i, name in enumerate(newUsrNames):
-            print('newIDS : {}'.format(newUsrIds[i]))
-            print('newEMAILS: {}'.format({newUsrEmail[i]}))
-            dbcursor.execute(
-                "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (
-                    newUsrIds[i],
-                    name,
-                    newUsrEmail[i],
-                    newUsrPass[i],
-                    newUsrCPF[i],
-                    newUsrNum[i],
-                    date.today().strftime("%d/%m/%Y"),
-                    datetime.now().strftime("%H:%M:%S"),
-                    True,
-                    # all the amazing list array stuff hold on lemme do the html first
+        for i, ids in enumerate(newUsrIds):
+            if (newUsrNames[i] != ''):
+                print('newIDS : {}'.format(newUsrIds[i]))
+                print('newNames: {}'.format({newUsrNames[i]}))
+                print('newEMAILS: {}'.format({newUsrEmail[i]}))
+                dbcursor.execute(
+                    "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        ids,
+                        newUsrNames[i],
+                        newUsrEmail[i],
+                        newUsrPass[i],
+                        newUsrCPF[i],
+                        newUsrNum[i],
+                        date.today().strftime("%d/%m/%Y"),
+                        datetime.now().strftime("%H:%M:%S"),
+                        True,
+                        # all the amazing list array stuff hold on lemme do the html first
+                    )
                 )
-            )
+            else:
+                print('hi int' + newUsrIds[i + 1])
+                newUsrIds[i + 1] = str(int(newUsrIds[i + 1]) - 1)
+                print('new unit' + newUsrIds[i + 1])
         db.commit()
     except Exception as e:
         print("commit failure attempting reconnection.")
@@ -617,8 +617,7 @@ def aUsrReg():
         else:
             print("Database RECONECTED now to the cursor")
     finally:
-        dbcursor.close()
-    return redirect("/usrMList")
+        return redirect("/usrMList")
 
 
 
