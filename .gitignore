@@ -1,4 +1,4 @@
-/**/__pycache__
+**/__pycache__
 **/.reference
 **/.vscode
 **/flask_session
@@ -7,4 +7,5 @@
 **/pythoneverywhere.txt
 **/medusrmain.sql
 **/mysql.log
+**/venv
 *cursos
