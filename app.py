@@ -2,6 +2,7 @@ import os.path
 import mysql.connector
 import numpy
 import shutil
+from backend.tables import TABLES
 from backend import dynamicHTMLS
 from backend.connection import connect_to_mysql
 from backend.usr_Acess import pageApology, loginRequired, isAdmin, isAdminPage
@@ -38,6 +39,19 @@ dbcursor = db.cursor(buffered=True)
 dbcursor.execute("SET SESSION MAX_EXECUTION_TIME=30000")
 
 print(dbcursor)
+for table_name in TABLES:
+    table_description = TABLES[table_name]
+    try:
+        print("Creating table {}: ".format(table_name), end='')
+        dbcursor.execute(table_description)
+    except mysql.connector.Error as err:
+        if err.errno == mysql.connector.errorcode.ER_TABLE_EXISTS_ERROR:
+            print("already exists.")
+        else:
+            print(err.msg)
+    else:
+        print("OK")
+
 
 def sSRec():
     print("Session is:", session["usr_id"])
