@@ -23,11 +23,9 @@ app.config['UPLOAD_FOLDER'] = 'static/assets/upload'
 Session(app)
 
 config = {
-    "host": 'mysql.railway.internal',
-    "port": '3306',
     "user": 'root',
-    "password": 'RFYsVCAMNlkxBWGvThgxIsCuQoywJwuJ',
-    "database": 'railway',
+    "password": 'root',
+    "database": 'medusrmain',
     "raise_on_warnings": True,
     "connection_timeout": 1200000,
 }
