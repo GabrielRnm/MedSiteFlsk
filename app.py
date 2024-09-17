@@ -27,7 +27,7 @@ config = {
     "password": 'root',
     "database": 'medusrmain',
     "raise_on_warnings": True,
-    "connection_timeout": 280,
+    "connection_timeout": 28800,
 }
 
 # Database connection
@@ -59,9 +59,15 @@ def sSRec():
     print("Session is:", session["usr_id"])
     return 0
 
-def dbRec(): 
-    db.reconnect()
-    return
+def dbRec():
+    try: 
+        db.reconnect()
+    except Exception as e:
+        print(e)
+        db.connect()
+        db.reconnect(10, 1)
+    finally:
+        return
 
 
 def ytEMB(Ylink:str):
@@ -444,7 +450,8 @@ def coursMCreate():
     except TypeError as e:
         print(e)
         print("commit failure check Course creation function.")
-    return redirect("/coursMList")
+    finally:
+        return redirect("/coursMList")
 
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
@@ -626,6 +633,7 @@ def usrMList():
 
     return render_template("alunoGrnc.html", alunos=alunos, alunoC=alunoC, cursosN=cursosN, varDCC=varDCC)
 
+
 @app.route("/aUsrReg", endpoint="ausr_reg", methods=["POST"])
 @loginRequired
 @isAdminPage
@@ -637,54 +645,48 @@ def aUsrReg():
     newUsrCPF = request.form.getlist("NusrCPF")
     newUsrNum = request.form.getlist("NusrNum")
 
-    if newUsrIds == None or newUsrIds == ['']:
-        return pageApology("None type detection", 400)
-    # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
+    print("New Course Rows: ", newUsrNames)
 
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
+    db.autocommit = False
     try:
-        dbRec()
         for i, ids in enumerate(newUsrIds):
-            dbcursor = db.cursor(buffered=True)
-            if (newUsrNames[i] != ''):
-                print('newIDS : {}'.format(newUsrIds[i]))
-                print('newNames: {}'.format({newUsrNames[i]}))
-                print('newEMAILS: {}'.format({newUsrEmail[i]}))
-                dbcursor.execute(
-                    "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (
-                        ids,
-                        newUsrNames[i],
-                        newUsrEmail[i],
-                        newUsrPass[i],
-                        newUsrCPF[i],
-                        newUsrNum[i],
-                        date.today().strftime("%d/%m/%Y"),
-                        datetime.now().strftime("%H:%M:%S"),
-                        True,
-                        # all the amazing list array stuff hold on lemme do the html first
-                    )
+            if (newUsrNames[i] == None or newUsrNames[i] == ''):
+                newUsrNames[i] = 'NULL'
+            print('649 newIDS : {}'.format(newUsrIds[i]))
+            print('650 newNames: {}'.format({newUsrNames[i]}))
+            print('651 newEMAILS: {}'.format({newUsrEmail[i]}))
+            dbcursor.execute(
+                "INSERT INTO user (usr_id, username, user_email, password, cpf, contact_number, reg_date, reg_time, active_status) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    ids,
+                    newUsrNames[i],
+                    newUsrEmail[i],
+                    newUsrPass[i],
+                    newUsrCPF[i],
+                    newUsrNum[i],
+                    date.today().strftime("%d/%m/%Y"),
+                    datetime.now().strftime("%H:%M:%S"),
+                    True,
+                    # all the amazing list array stuff hold on lemme do the html first
                 )
-                db.commit()
-                dbcursor.close()
-            else:
-                print('hi int' + newUsrIds[i + 1])
-                newUsrIds[i + 1] = str(int(newUsrIds[i + 1]) - 1)
-                print('new unit' + newUsrIds[i + 1])
+            )
     except Exception as e:
-        print("commit failure attempting reconnection.")
+        print('674 EXCEPTION ' + e)
+        print("675 commit failure attempting reconnection.")
         db.reconnect(attempts=100)
-        print(e)
         if db.is_connected() == False:
-            print("Reconnection failed.")
+            print(" 678 Reconnection failed.")
         else:
-            print("Database RECONECTED now to the cursor")
+            print("680 Database RECONECTED now to the cursor")
     finally:
+        db.commit()
+        db.autocommit = True
+        dbcursor.close()
         db.disconnect()
         
         return redirect("/usrMList")
-    
-
-
 
 
 @app.route("/usrCRSreg", endpoint="usr_C_reg", methods=["POST"])
@@ -758,7 +760,6 @@ def deleteUser():
         db.commit()
         dbcursor.close()
         db.disconnect()
-        return redirect("/usrMList")
 
     elif detN == 1:
         id = request.form.get("id")
@@ -790,7 +791,7 @@ def deleteUser():
             curcount += 1
         dbcursor.close()
         db.disconnect()
-        return redirect("/usrMList")
+    return redirect("/usrMList")
 
 
 # NOT DONE supposed to log out users who have been deleted to avoid further errors in database

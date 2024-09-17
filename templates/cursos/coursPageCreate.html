@@ -50,10 +50,7 @@
                 </div>
                 <div class="loginStuff">
                 {% if session["usr_id"] %}
-                    {#
-                    <a href="/logout" style="text-decoration: none;"><li class="list-group-item">Sair</li></a>
-                    <a href="/usrMainPage" style="text-decoration: none;"><li class="list-group-item">Página do Estudante</li></a>
-                    #}
+                    <a class="userBtn btn btn-primary" style="margin: 0 5pt;" href="/logout" >Sair</a>
                     <div class="userBtnC">
                         <a class="userBtn btn btn-primary" href="usrMainPage">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="userMi bi bi-person-lines-fill" viewBox="0 0 16 16">
