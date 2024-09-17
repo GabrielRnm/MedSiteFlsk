@@ -27,21 +27,24 @@ config = {
     "password": 'root',
     "database": 'medusrmain',
     "raise_on_warnings": True,
-    "connection_timeout": 1200000,
+    "connection_timeout": 280,
 }
 
 # Database connection
 db = connect_to_mysql(config)
 
-dbcursor = db.cursor(buffered=True)
-dbcursor.execute("SET SESSION MAX_EXECUTION_TIME=30000")
+print(db)
 
-print(dbcursor)
+cur = db.cursor(buffered=True)
+cur.execute("SET SESSION MAX_EXECUTION_TIME=30000")
+
+
+print(cur)
 for table_name in TABLES:
     table_description = TABLES[table_name]
     try:
         print("Creating table {}: ".format(table_name), end='')
-        dbcursor.execute(table_description)
+        cur.execute(table_description)
     except mysql.connector.Error as err:
         if err.errno == mysql.connector.errorcode.ER_TABLE_EXISTS_ERROR:
             print("already exists.")
@@ -51,18 +54,14 @@ for table_name in TABLES:
         print("OK")
 
 
+
 def sSRec():
     print("Session is:", session["usr_id"])
     return 0
 
-def dbRec():
-    if db.is_connected == False:
-        print("Attempting Reconnection...")
-        while db.is_connected() == False:
-            db.connect()
-    else: 
-        print("Database Connected")
-    return 0
+def dbRec(): 
+    db.reconnect()
+    return
 
 
 def ytEMB(Ylink:str):
@@ -116,6 +115,7 @@ def advPage(type):
 @loginRequired
 def usrMainPage():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     print(Session)
     isAdmin = session.get("isAdmin", False)
     if isAdmin != True:
@@ -124,6 +124,8 @@ def usrMainPage():
         dbcursor.execute("SELECT * FROM curso LEFT JOIN curso_check ON curso_check.cc_curs_id=curs_id WHERE cc_usr_id = %s", (session["usr_id"],))
         cursos = dbcursor.fetchall()
         # print(len(cursos))
+        dbcursor.close()
+        db.disconnect()
         if len(cursos) > 0:
             return render_template("MainPageUsr.html", cursos=cursos)
         else:
@@ -133,6 +135,8 @@ def usrMainPage():
         print("ADMIN")
         dbcursor.execute("SELECT * FROM curso")
         cursos = dbcursor.fetchall()
+        dbcursor.close()
+        db.disconnect()
         return render_template("MainPageUsr.html", cursos=cursos)
 
 @app.route("/adminMainPage")
@@ -149,6 +153,7 @@ def adminMainPage():
 @isAdminPage
 def classMCreate():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     # New Class / Document
     clssTyp = request.form.get('type')
 
@@ -196,7 +201,8 @@ def classMCreate():
                     print('LINE NEW:', iNew)
                     file.write(iNew)
             file.truncate()
-
+        dbcursor.close()
+        db.disconnect()
         return redirect("/coursePgRdr/{}/1".format(course))
 
     elif int(clssTyp) == 0: # 0 = Link
@@ -259,16 +265,22 @@ def classMCreate():
 
             file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
             file.write('\n\nMclass_{} = ClssCnt(True, "{}", "{}")'.format(idenC[0], clssLink, filename))
-
+        
+        dbcursor.close()
+        db.disconnect()
         return redirect("/coursePgRdr/{}/1".format(course))
     
     else:
+        dbcursor.close()
+        db.disconnect
         return '????'
 
 @app.route("/classMDel", endpoint="class_m_del", methods=["POST"])
 @loginRequired
 @isAdminPage
 def classMDel():
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
     classI = request.form['id']
     # List
     # 1 - DELETE MYSQL ROW
@@ -283,6 +295,8 @@ def classMDel():
         dbcursor.execute("UPDATE classes SET a_id = a_id - 1 WHERE a_id > %s", (idE_ac,))
         dbcursor.execute("UPDATE classes SET c_a_id = c_a_id - 1 WHERE c_a_id > %s", (idE_ac,))
         db.commit()
+        dbcursor.close()
+        db.disconnect()
     # 3 - DELETE FILES ?
         idE_cN = str(idE[3][:-3])
 
@@ -318,6 +332,7 @@ def classMDel():
 @isAdminPage
 def coursMEdit():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsProfs = request.form['prof']
@@ -333,6 +348,8 @@ def coursMEdit():
         )
     )
     db.commit()
+    dbcursor.close()
+    db.disconnect()
     return redirect("/coursMList")
 
 @app.route("/coursMList", endpoint="cours_m_list", methods=["GET"])
@@ -340,10 +357,13 @@ def coursMEdit():
 @isAdminPage
 def coursMList():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     dbcursor.execute("SELECT * FROM curso")
     cursos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM curso")
     cursoC = dbcursor.fetchall()
+    dbcursor.close()
+    db.disconnect()
     return render_template("/cursos/coursPageCreate.html", cursos=cursos, cursoC=cursoC, cursoCs = 100 + int((cursoC[0][0]) * 2) )
 
 
@@ -352,6 +372,7 @@ def coursMList():
 @isAdminPage
 def coursMCreate():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     # Criar curso por function Sendo que Só admin pode criar
     # Ao mesmo tempo que vai criar o curso no databank tem que criar um html do curso
     # Tem que deixar eles editarem tudo sobre o curso tbm :/
@@ -361,8 +382,12 @@ def coursMCreate():
     newCrsPrices = request.form.getlist("NcrsPrice")
 
     if newCsrIds == None or newCsrIds == '':
+        dbcursor.close()
+        db.disconnect()
         return pageApology("None type detection", 400)
     if newCrsNames == None or newCrsNames == '':
+        dbcursor.close()
+        db.disconnect()
         return pageApology("None type detection", 400)
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
 
@@ -392,8 +417,12 @@ def coursMCreate():
                         )
                     )
                     db.commit()
+                    
                 else:
                     print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
+                
+                dbcursor.close()
+                db.disconnect()
 
                 # Better to do this after so if the database injection fails we dont create unecessary files
                 if (checkF == False):
@@ -423,6 +452,7 @@ def coursMCreate():
 @isAdminPage
 def deleteCourse():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     id = request.form.get("id")
 
     dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s", (id,))
@@ -454,18 +484,23 @@ def deleteCourse():
     checkF = os.path.isdir('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]))
     if (checkF == True):
         shutil.rmtree('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]), ignore_errors=True)
-
+    
+    dbcursor.close()
+    db.disconnect()
     return redirect("/coursMList")
 
 @app.route("/coursePgRdr/<course>/<clss>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
 def coursePgRdr(course, clss:1):
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     if session["isAdmin"] == False:
         dbcursor.execute("SELECT * FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", (course, session["usr_id"]))
         chkU = dbcursor.fetchone()
         chkU = chkU # Check later if its necessary but just to avoid mysql delaying stuff
         if chkU is None:
+            dbcursor.close()
+            db.disconnect()
             return redirect("/usrMainPage")
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
@@ -483,6 +518,9 @@ def coursePgRdr(course, clss:1):
         aulas = dbcursor.fetchall()
         aulas = aulas # fixes the bug for deleted classes still appearing
 
+        dbcursor.close()
+        db.disconnect()
+
         if (len(clssCNT) > 0):
             clssCNT = clssCNT[0]
 
@@ -493,6 +531,7 @@ def coursePgRdr(course, clss:1):
 
             fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, module.doc)
 
+            
             if (module.file == True):
                 return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, fPath=fPath)
             else:
@@ -508,6 +547,7 @@ def coursePgRdr(course, clss:1):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     if request.method == "POST":
         # Variables for making it easier to type
         f_password = request.form.get("password")
@@ -558,10 +598,13 @@ def login():
             session["usr_id"] = row[0]
             session["email"] = row[2]
 
+            dbcursor.close()
+            db.disconnect()
+
             return redirect("/")
-
-
     else:
+        dbcursor.close()
+        db.disconnect()
         return render_template("login.html")
 
 ## ADMIN REGISTER EDIT USER FUNCTIONS ##
@@ -570,7 +613,8 @@ def login():
 @loginRequired
 @isAdminPage
 def usrMList():
-    #dbRec()
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
     dbcursor.execute("SELECT * FROM user")
     alunos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM user")
@@ -579,6 +623,7 @@ def usrMList():
     cursosN = dbcursor.fetchall()
     dbcursor.execute("SELECT * FROM curso_check ORDER BY cc_curs_id")
     varDCC = dbcursor.fetchall()
+
     return render_template("alunoGrnc.html", alunos=alunos, alunoC=alunoC, cursosN=cursosN, varDCC=varDCC)
 
 @app.route("/aUsrReg", endpoint="ausr_reg", methods=["POST"])
@@ -597,7 +642,9 @@ def aUsrReg():
     # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
 
     try:
+        dbRec()
         for i, ids in enumerate(newUsrIds):
+            dbcursor = db.cursor(buffered=True)
             if (newUsrNames[i] != ''):
                 print('newIDS : {}'.format(newUsrIds[i]))
                 print('newNames: {}'.format({newUsrNames[i]}))
@@ -617,11 +664,12 @@ def aUsrReg():
                         # all the amazing list array stuff hold on lemme do the html first
                     )
                 )
+                db.commit()
+                dbcursor.close()
             else:
                 print('hi int' + newUsrIds[i + 1])
                 newUsrIds[i + 1] = str(int(newUsrIds[i + 1]) - 1)
                 print('new unit' + newUsrIds[i + 1])
-        db.commit()
     except Exception as e:
         print("commit failure attempting reconnection.")
         db.reconnect(attempts=100)
@@ -631,7 +679,11 @@ def aUsrReg():
         else:
             print("Database RECONECTED now to the cursor")
     finally:
+        db.disconnect()
+        
         return redirect("/usrMList")
+    
+
 
 
 
@@ -640,6 +692,8 @@ def aUsrReg():
 @isAdmin
 @isAdminPage
 def usrCRSreg():
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
     id = request.form.get('id').split(',')
     detN = request.form['detNmb']
     if int(detN) == 1:
@@ -679,6 +733,8 @@ def usrCRSreg():
             (id[0], id[1])
         )
         db.commit()
+    dbcursor.close()
+    db.disconnect()
     return ("request...")
 
 @app.route("/deleteUser", endpoint="usr_del_reg", methods=["POST"])
@@ -687,6 +743,7 @@ def usrCRSreg():
 @isAdminPage
 def deleteUser():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     detN = int(request.form['detNmb'])
     if detN == 0:
         id = request.form.get("id")
@@ -699,6 +756,8 @@ def deleteUser():
         # decrement ids bigger than deleted id
         dbcursor.execute("UPDATE user SET usr_id = usr_id - 1 WHERE usr_id > %s", ((id,)))
         db.commit()
+        dbcursor.close()
+        db.disconnect()
         return redirect("/usrMList")
 
     elif detN == 1:
@@ -729,6 +788,8 @@ def deleteUser():
             dbcursor.execute("UPDATE user SET usr_id = usr_id - 1 WHERE usr_id >= %s", (( int(idray[0]),)))
             db.commit()
             curcount += 1
+        dbcursor.close()
+        db.disconnect()
         return redirect("/usrMList")
 
 
@@ -736,6 +797,8 @@ def deleteUser():
 # and also avoid stuff like people logging into old ids (scary)
 @loginRequired
 def sndLogoutRq(id, detnmb = False):
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
     if detnmb == False:
         for i, ids in enumerate(id):
             if session["usr_id"] == ids:
@@ -754,6 +817,7 @@ def sndLogoutRq(id, detnmb = False):
 @isAdminPage
 def AuserMEdit():
     dbRec()
+    dbcursor = db.cursor(buffered=True)
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsEmail = request.form['email']
@@ -773,6 +837,8 @@ def AuserMEdit():
         )
     )
     db.commit()
+    dbcursor.close()
+    db.disconnect()
     return redirect("/usrMList")
 
 
@@ -782,7 +848,9 @@ def AuserMEdit():
 
 # Register
 @app.route("/register", methods=["GET", "POST"])
-def register():    
+def register():   
+    dbRec()
+    dbcursor = db.cursor(buffered=True) 
     if request.method == "POST":
         dbcursor.execute("SELECT COUNT(usr_id) FROM user")
         uCnt = dbcursor.fetchone()
@@ -844,9 +912,13 @@ def register():
                             )
                         )
                     db.commit()
+                    dbcursor.close()
+                    db.disconnect()
                     return redirect("/")
     # GET
     else:
+        dbcursor.close()
+        db.disconnect()
         return render_template("register.html")
     
 @app.route("/logout")
