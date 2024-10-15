@@ -544,7 +544,7 @@ def coursePgRdr(course, clss:1):
             else:
                 return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content)
         else:
-            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course)
+            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName,isFile=False, aulas=aulas, course=course)
     else:
         return render_template("/cursos/curpages/curNoN.html")
 
@@ -875,8 +875,9 @@ def register():
         elif not f_email:
             return pageApology("Providencie Email válido", 400)
         
-        elif not f_CPF or f_CPF.isalpha():
-            return pageApology("Providencie CPF válido", 400)
+
+        #elif not f_CPF or f_CPF.isalpha():
+        #   return pageApology("Providencie CPF válido", 400)
 
         # CHECK PASSWORD 
         elif not f_password:

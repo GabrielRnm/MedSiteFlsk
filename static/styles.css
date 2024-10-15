@@ -1,13 +1,7 @@
-html {
-    position: relative;
-    min-height: 100%;
-    -ms-zoom: 50%;
-}
-
 body
 {
     background-color: white;
-    margin-bottom: 183pt;
+    margin-bottom: 10rem;
 }
 
 
@@ -16,33 +10,39 @@ footer
     display: block;
     position: absolute;
     width: 100%;
+    height: 16rem;
+    /*bottom: 0px;*/
+}
+
+footer .container {
+    min-height: 100%;
+    padding-bottom: 3rem;
     background-color: rgb(4, 177, 174);
-    padding-bottom: 8rem;
-    bottom: 0px;
 }
 
 h3
 {
     font-weight: bold;
-    font-size: 24pt;
+    font-size: 3rem;
     font-family: 'Montserrat';
 }
 
 #footerContainer1
 {
     color: white;
-    font-size: 16px;
+    font-size: 1vw;
     text-align: start;
-    top: 30px;
     font-family: 'Raleway';
+}
+
+#footerContainer1 span {
+    font-size: 1.2rem;
 }
 
 .container
 {
     position: relative;
     font-family: Arial, Helvetica, sans-serif;
-    min-height: 100%;
-    width: 100%;
 }
 
 .header 
@@ -74,12 +74,12 @@ h3
 }
 
 .advPnls{
-    width: 100%;
+    max-width: 100%;
     margin: 0 0;
 }
 
 .advPnls img {
-    width: 100%;
+    max-width: 100%;
 }
 
 .hbar
@@ -87,7 +87,7 @@ h3
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     display: flex; 
     position: absolute;
-    right: 250pt;
+    right: 19rem;
     width: fit-content;
     margin: 0 0;
 }
@@ -108,12 +108,27 @@ h3
     border-color: transparent;  
 }
 
+.userBtn svg {
+    display: none;
+}
+
+.userBtnC svg {
+    display: block;
+}
+
+
 .hbar a .list-group-item
 {
     color: rgba(38,59,78,255);
     text-decoration: none;
     background: none;
     box-sizing: content-box;
+}
+
+.hbarbtn {
+    display: none;
+    max-height: 35%;
+    max-width: 30%;
 }
 
 .CrsBtn :hover {
@@ -228,22 +243,32 @@ h3
 {
     background-color: black;
     display: block;
-    height: 140%;
-    margin-right: 5px;
+    height: 100%;
+    margin-right: 1rem;
     user-select: none;
 }
 
+.adScr .container .row .col-md-auto {
+    width: 35%;
+}
+
+.adScr .container .row .col {
+    width: 50%;
+}
+
 .adScr {
-    margin-top: 2%;
     display: flex;
-    height: 450px;
+    margin-top: 2%;
+    height: 30rem;
 }
 
 .adScr .h1D {
     display: block;
-    width: 25%;
-    height: 80%;
+    position: relative;
+    width: 85%;
+    max-height: fit-content;
     margin: 0 7%;
+    box-sizing: border-box;
     /*border: #050A30 solid 2px;*/
 }
 
@@ -251,8 +276,8 @@ h3
     font-weight: bold;
     color: #050A30;
     line-height: 1;
-    height: 72%;
-    font-size: 58pt;
+    max-height: 72%;
+    font-size: 4rem;
     margin: 0 0;
     user-select: none;
     /*border: green solid 2px;*/
@@ -260,45 +285,44 @@ h3
 
 .adScr .h1D .s1D {
     text-align: center;
-    margin: 0 0;
-    height: 29%;
+    max-height: 29%;
     width: 100%;
     /*border: blue solid 2px;*/
 }
 
 .s1D p {
-    margin: 0 0;
+    font-size: 1rem;
 }
 
 .adScr .h2D {
     user-select: none;
-    display: inline-block;
-    margin-left: auto;
-    margin-top: 40px;
-    margin-right: 10%;
-    position: relative;
-    /*border: #050A30 solid 2px;*/
-    height: 80%;
-    width: 46%;
+    /*border: #ff0000 solid 2px;*/
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 .adScr .h2D img {
-    object-fit: cover;
-    object-position: 10% 80%;
+    display: block;
     height: 100%;
     width: 100%;
+    object-fit: cover;
 }
 
 .tEScr {
     text-align: center;
-    background-color: #5CB9B4;
     margin: 0 0;
-    height: 390pt;
+    max-height: 38rem;
     overflow-wrap: break-word;
+    overflow: hidden;
+}
+
+.tEScr .container {
+    background-color: #5CB9B4;
 }
 
 .tEScr h2 {
-    font-size: 35pt;
+    font-size: 2.5rem;
     display: block;
     color: #50204D;
 }
@@ -306,72 +330,72 @@ h3
 .tEScr p {
     font-weight: bold;
     margin: 0 0;
-    font-size: 14.8pt;
+    font-size: 1.2rem;
 }
 
 .mdScr {
-    height: 500px;
+    max-height: 53rem;
+    overflow: hidden;
+    margin-bottom: 5rem;
 }
 
 .mdScr h2 {
-    width: 30%;
-    margin: 2% auto;
+    margin: 1rem auto;
     text-align: center;
     text-wrap: balance;
     color: #FD288D;
-    font-size: 30pt;
+    font-size: 2.5rem;
     font-weight: bold;   
 }
 
 .mdScr p {
-    font-size: 13pt;
+    font-size: 1.2rem;
     font-weight: bold;
-    margin:auto;
-    width: 50%;
+    margin: auto;
+    max-width: 50%;
     color: #1A3F3E;
 }
 
 .difad {
-    border: #5b6eff;
+    /*border: #5b6eff solid 2px;*/
     border-top: 5%;
     text-align: center;
-    height: 400pt;
+    max-height: 30rem;
 }
 
 .difad h2 {
-    margin: 2% 0;
+    margin: 0.5rem 0;
     color: #FD288D;
-    font-size: 40px;
+    font-size: 3rem;
     font-weight: bold;
 }
 
 .difBOXwr {
-    margin: 2% 0;
-    display: flex;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    margin: 2rem 0;
+    grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
     align-items: center;
     justify-content: center;
-    height: 400px;
-    overflow-x: auto;
+    height: 20rem;
 }
 
 .difBOX {
     height: 100%;
-    width: 150pt;
-    border: green 2px;
-    margin: auto 5%;
+    max-width: 15rem;
+    /*border: green 2px solid;*/
+    margin: 0 0;
 }
 
 .circC {
-    align-content: center;
-    justify-content: center;
-    width: 150pt;
+    margin: 0 15%;
+    align-self: center;
+    justify-self: center;
+    max-width: 10rem;
 }
 
 .difPc {
     fill: #FD288D;
-    height: 120px;
-    width: 120px;
+    height: 10rem;
+    max-width: 10rem;
 }
 
 .difBOX h3 { 
@@ -385,38 +409,45 @@ h3
     margin-top: 10px; /* change this to whatever height you want it */
 }
 
+p .smallBR {
+    margin-top: 0.001rem;
+}
+
 .difBOX p {
-    font-size: 14px;
+    font-size: 0.8rem;
     border: blue 1px;
 }
 
 .aprAd {
-    height: 380pt;
+    height: 30rem;
+    /*border: green solid;*/
+    margin: 0 0;
+    display: none;
+}
+
+.aprAd .container {
     background-color: black;
-    border: green solid;
-    margin:0 0;
+    height: 100%;
 }
 
 .aprAd h2{
     text-align: center;
     color: #FD288D;
-    font-size: 40px;
+    font-size: 3rem;
     font-weight: bold;
 }
 
 .depAd {
     margin: 0 0;
-    height: 500pt;
-    background-color: #2B1821;
+    height: 40rem;
 }
 
 .depAd div h2 {
-    background-color: #2B1821;
     margin: 0 auto;
-    margin-bottom: 5%;
+    margin-bottom: 5rem;
     text-align: center;
     color: #FD288D;
-    font-size: 40px;
+    font-size: 3rem;
     font-weight: bold;
 }
 
@@ -424,40 +455,42 @@ h3
     border: #FD288D;
 }
 
-.depAd .container {
-    border: pink solid;
+.depAd .container.ist {
+    height: 100%;
+    background-color: #2B1821;
+
 }
 
 .depBoxWr {
-    border: yellow solid;
     height: calc(100% - 40%);
     display: flex;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     grid-gap: 2%;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .depbox {
     
     margin: 0 2%;
     border-radius: 5%;
-    width: 300px;
+    max-width: 300px;
     height: 80%;
-    border: green solid;
+    /*border: green solid;*/
 }
 
 .dep {
-    width: 100%;
-    border: white solid 1px;
-    height: 100%;
+    width: 16rem;
+    border: white solid 0.5px;
+    height: 23rem;
     border-radius: inherit;
 }
 
 .dep .dWr{
     height: 80%;
     margin: 5% 5%;
-    width: 90%;
+    max-width: 90%;
     font-size: large;
 }
 
@@ -473,18 +506,20 @@ h3
 }
 
 .cntct {
-    height: 500px;
-    border: transparent solid 1px;
-    background: linear-gradient(to right, rgb(0, 0, 0), rgb(0, 0, 0), rgb(114, 55, 138), rgb(221, 75, 119), rgb(0, 0, 0));
+    height: 30rem;
+    /*border: transparent solid 1px;*/
     animation: gradient 4s alternate infinite;
+}
+
+.cntct .container {
+    height: 100%;
+    background: linear-gradient(to right, rgb(0, 0, 0), rgb(0, 0, 0), rgb(114, 55, 138), rgb(221, 75, 119), rgb(0, 0, 0));
 }
 
 .cntct h2 {
     color: #FD288D;
     font-size: 40px;
-    font-weight: bold;
     margin: 0 5%;
-    margin-top: 10%;
 }
 
 .cntL {
@@ -517,7 +552,7 @@ h3
 
 .CrsSel {
     height: 70%;
-    width: 40%;
+    max-width: 40%;
     margin: 10% 5%;
     border: gray solid;
     border-radius: 10%;
@@ -537,4 +572,626 @@ h3
 	100% {
 		background-position: 0% 50%;
 	}
+}
+
+@media screen and (max-width: 1200px) {
+    .adScr .container .row .col-md-auto {
+        width: 45%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+
+    .adScr .container .row .col {
+        width: 50%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+
+    .s1BR {
+        display: block;
+        content: "";
+        margin-top: 1px;
+    }
+
+    .adScr {
+        height: 22rem;
+    }
+
+    .adScr .h1D .s1D {
+        /*margin-left: 1rem;*/
+        width: 80%;
+        /*border: #050A30 solid 1px;*/
+    }
+
+    .adScr .h1D h1 {
+        /*border: #FD288D solid 1px;*/
+    }
+
+    .s1D p {
+        font-size: 0.87rem;
+    }
+
+    .adScr .h2D img {
+        width: 100%;
+        height: auto;
+    }
+
+    .smalltxtimg {
+        margin-right: 1px;
+        max-height: 100%;
+    }
+
+    .logregoutbox .list-group-item {
+        margin: 0 1vw;
+    }
+
+    .hbar{
+        display: none;
+    }
+
+    .hbarbtn {
+        display: flex;
+    }
+
+    .userBtn svg {
+        display: block;
+    }
+
+    .userBtn span {
+        display: none;
+    }
+
+    .userBtnC span {
+        display: none;
+    }
+
+    .logregoutbox .list-group-item {
+        margin: 0 1vw;
+    }
+
+    .dep {
+        max-width: 14rem;
+        border: white solid 0.5px;
+        max-height: 17rem;
+        border-radius: inherit;
+    }
+    
+    .dep .dWr{
+        height: 80%;
+        margin: 5% 5%;
+        max-width: 90%;
+        font-size: large;
+    }
+    
+    .dTxt {
+        font-size: 0.8rem;
+        color: white;
+        white-space: normal;
+    }
+    
+    .dCred {
+        font-size: 0.8rem;
+        white-space: normal;
+        color: #FD288D;
+        font-weight: bold;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .col-md-auto {
+        width: 35%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+
+    .col {
+        width: 60%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+    
+    .s1BR {
+        margin-top: 1px;
+    }
+
+    .adScr {
+        height: 17rem;
+    }
+
+    .adScr .h1D h1{
+        /*border: black 2px solid;*/
+        margin-bottom: 0;
+        width: 100%;
+        font-size: 3rem;
+    }
+
+    .adScr .col{
+        /*border: black 2px solid;*/
+    }
+    
+    .adScr .h1D .s1D {
+        margin-left: 0;
+        /*border: #050A30 solid 1px;*/
+    }
+    
+    .adScr .h1D .s1D p {
+        font-size: 0.6rem;
+    }
+
+    .smalltxtimg {
+        margin-right: 1px;
+        max-height: 100%;
+    }
+
+    .logregoutbox .list-group-item {
+        margin: 0 1vw;
+    }
+
+    .tEScr p {
+        font-size: 1rem;
+    }
+
+    .mdScr p {
+        font-size: 1rem;
+    }
+
+    .difad .container h2 {
+        font-size: 3rem;
+    }
+
+    .difad .col-sm-3 {
+        /*border: #050A30 solid 1px;*/
+    }
+
+    .difad .difBOX h3 {
+        font-size: 1.5rem;
+    }
+
+    .difad .difBOX p {
+        /*border: #FD288D solid 1px;*/
+        font-size: 0.65rem;
+    }
+
+    .hbar{
+        display: none;
+    }
+
+    .hbarbtn {
+        display: flex;
+    }
+
+    .smalltxtimg {
+        margin-right: 1px;
+        max-height: 100%;
+    }
+
+    .userBtn svg {
+        display: block;
+    }
+
+    .userBtn span {
+        display: none;
+    }
+
+    .userBtnC span {
+        display: none;
+    }
+
+    .logregoutbox .list-group-item {
+        margin: 0 1vw;
+    }
+
+    .dep {
+        max-width: 10rem;
+        border: white solid 0.5px;
+        max-height: 17rem;
+        border-radius: inherit;
+        display: '';
+    }
+    
+    .dep .dWr{
+        height: 80%;
+        margin: 5% 5%;
+        max-width: 90%;
+        font-size: large;
+    }
+    
+    .dTxt {
+        font-size: 0.57rem;
+        color: white;
+        white-space: normal;
+    }
+    
+    .dCred {
+        font-size: 0.57rem;
+        white-space: normal;
+        color: #FD288D;
+        font-weight: bold;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .col-md-auto {
+        width: 45%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+
+    .col {
+        width: 50%;
+        /*border: #1A3F3E 1px dotted;*/
+    }
+
+    .adScr {
+        height: 12rem;
+    }
+
+    .s1BR {
+        display: block;
+        content: "";
+        margin-top: 0.5rem;
+    }
+
+    .adScr .h1D h1{
+        /*border: black 2px solid;*/
+        margin-bottom: 0;
+        font-size: 1.5rem;
+    }
+
+    .adScr .h1D .s1D {
+        text-align: start;
+        /*border: #050A30 solid 1px;*/
+        width: 80%;
+    }
+
+    .adScr .h1D .s1D p {
+        margin-left: 0.05rem;
+        font-size: 0.5rem;
+    }
+
+    .adScr .h2D img {
+        width: 100%;
+        height: auto;
+    }
+
+    .tEScr h2 {
+        font-size: 1.2rem;
+    }
+
+    .tEScr p {
+        font-size: 0.7rem;
+    }
+
+    .mdScr h2 {
+        font-size: 1.2rem;
+    }
+
+    .mdScr p {
+        font-size: 0.7rem;
+    }
+
+    .difad .container h2 {
+        font-size: 1.5rem;
+    }
+
+    .difad .difBOX h3 {
+        font-size: 1rem;
+    }
+
+    .difad .difBOX .difPV {
+        display: flex;
+        position: relative;
+        /*border:green solid 1px;*/
+        margin: 0 0;
+        right: 0.65rem;
+        justify-content: center;
+        width: 120%;
+    }
+    /*
+    .difad .difBOX p {
+        font-size: 0.55rem;
+    }
+
+    .depAd div h2 {
+        font-size: 1.5rem;
+    }
+
+    .dep {
+        max-width: 7.5rem;
+        border: white solid 0.5px;
+        max-height: 20rem;
+        border-radius: inherit;
+    }
+    
+    .dep .dWr{
+        margin: 0 0;
+    }
+    
+    .dTxt {
+        font-size: 0.5rem;
+        color: white;
+        white-space: normal;
+    }
+
+    .dTxt br {
+        display: none; 
+        content: ""; 
+        margin-top: 1px; 
+    }
+    
+    .dCred {
+        font-size: 0.5rem;
+        white-space: normal;
+        color: #FD288D;
+        font-weight: bold;
+    }
+    */
+
+}
+
+@media screen and (max-width: 576px) {
+    .tEScr p {
+        text-align: left;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 8rem;
+    }
+
+    .difad .difBOX h3 {
+        font-size: 1rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.55rem;
+    }
+
+}
+
+@media screen and (max-width: 532px) {
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 7rem;
+    }
+}
+
+
+@media screen and (max-width: 466px) {
+    .difad .difBOX .difPV {
+        /*border:green solid 1px;*/
+        right: 0;
+        width: 100%;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.55rem;
+    }
+
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 6.5rem;
+    }
+}
+
+@media screen and (max-width: 433px) {
+    .loginStuff .list-group-item.rounded {
+        border: black 1px solid;
+        font-size: 0.5rem;
+    }
+
+    .adScr {
+        height: 22rem;
+        /*border: #050A30 solid 1px;*/
+    }
+
+    .adScr .h1D {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 1rem;
+    }
+
+    .adScr .h1D h1{
+        /*border: yellow solid 1px;*/
+        width: 50%;
+    }
+
+    .adScr .h1D .s1D{
+        margin: auto auto;
+        width: 50%;
+        /*border: yellow solid 1px;*/
+    }
+
+    .adScr .h1D .s1D p {
+        font-size: 0.55rem;
+        text-align: center;
+        margin: auto auto;
+    }
+
+    .adScr .container .row .col-md-auto {
+        width: 100%;
+    }
+    
+    .adScr .container .row .col {
+        width: 50%;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 6rem;
+    }
+
+    .difad .difBOX h3 {
+        font-size: 0.7rem;
+    }
+}
+
+@media screen and (max-width: 401px) {
+
+    .adScr .h1D .s1D p {
+        font-size: 0.5rem;
+    }
+
+    .tEScr p {
+        font-size: 0.6rem;
+    }
+
+    .tEScr p {
+        font-size: 0.6rem;
+    }
+
+    .mdScr p {
+        font-size: 0.6rem;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 5.5rem;
+    }
+
+    .footer h3 {
+        font-size: 2rem;
+    }
+}
+
+@media screen and (max-width: 366px) {
+    .adScr .h1D .s1D p {
+        font-size: 0.45rem;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 5rem;
+    }
+}
+
+@media screen and (max-width: 335px) {
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 4.5rem;
+    }
+
+    .difad .difBOX h3 {
+        font-size: 0.6rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.5rem;
+    }
+}
+
+@media screen and (max-width: 306px) {
+    .adScr .h1D .s1D p {
+        font-size: 0.4rem;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 4rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.45rem;
+    }
+}
+
+@media screen and (max-width: 277px) {
+    .adScr .h1D .s1D p {
+        font-size: 0.35rem;
+    }
+
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 6rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.45rem;
+    }
+
+    .cntct h2 {
+        font-size: 1rem;
+    }
+
+    .cntL span {
+        font-size: 0.6rem;
+    }
+
+    .footer h3 {
+        font-size: 1.5rem;
+    }
+
+    #footerContainer1 span {
+        font-size: 0.8rem;
+    }
+}
+
+@media screen and (max-width: 205px) {
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 5rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.45rem;
+    }
+
+    .difad .container h2 {
+        font-size: 1rem;
+    }
+
+
+    .depAd div h2 {
+        font-size: 1rem;
+    }
+
+    .footer h3 {
+        font-size: 1rem;
+    }
+
+}
+
+@media screen and (max-width: 174px) {
+    .difBOXwr .container .row{
+        justify-content: center;
+    }
+
+    .difBOXwr .container .row .col-sm-3 {
+        width: 4rem;
+    }
+
+    .difad .difBOX h3 {
+        font-size: 0.5rem;
+    }
+
+    .difad .difBOX p {
+        font-size: 0.45rem;
+    }
+
 }
