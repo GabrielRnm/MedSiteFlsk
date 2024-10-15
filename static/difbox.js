@@ -11,7 +11,7 @@ window.onload = function() {
         depnum = 0;
     }
     else {
-        depnum = 2
+        depnum = 0
     }
     reRen()
 }
@@ -109,16 +109,19 @@ function showPrv(e) {
     for (child in depoiBX.children) {
         if (child < depoiBX.children.length + 1 && depoiBX.children[child] != HTMLButtonElement) {
             if (depoiBX.children[child].style.display == 'none') {
+                console.log('count: ' + count);
                 count += 1;
             }
         }
-        if (count > 0 && child < depoiBX.children.length + 1 && child == count + 2) {
+        if (count > 0 && child < depoiBX.children.length + 1 && child == count + depnum) {
             if (depoiBX.children[child].style.display == '') {
+                console.log('here');
                 depoiBX.children[child - (depnum + 1)].style.display = '';
                 depoiBX.children[child].style.display = 'none';
             }
         }
         if (window.getComputedStyle(depoiBX.children[0]).display == 'block')  {
+            console.log('here 2');
             buttonS.style.display = '';
             buttonP.style.display = 'none';
         }
