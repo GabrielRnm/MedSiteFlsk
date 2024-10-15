@@ -4,9 +4,9 @@
 
 let depnum = 0;
 let prev = 0
+let next = 0
 
 window.onload = function() {
-    console.log(depoiBX.scrollWidth);
     if (depoiBX.scrollWidth < 600) {
         depnum = 0;
     }
@@ -16,11 +16,7 @@ window.onload = function() {
     reRen()
 }
 
-
 window.onresize = function() {
-    document.title = (window.innerWidth + "/" + window.innerHeight);
-
-    console.log(depoiBX.scrollWidth);
     if (depoiBX.scrollWidth < 600) {
         depnum = 0;
     }
@@ -85,45 +81,77 @@ function reRen() {
 
 function showNxt(e) {
     for (child in depoiBX.children) {
-        console.log(child + ' : ' + depoiBX.children[child]);
-        console.log('lenght : ' + depoiBX.children.length);
-        if (child < depoiBX.children.length + 1 && child > depnum && depoiBX.children[child] != HTMLButtonElement) {
-            if (depoiBX.children[child].style.display == 'none' && child > prev) {
-                prev = child
-                depoiBX.children[child].style.display = '';
-                depoiBX.children[child - (depnum + 1)].style.display = 'none';
-                if (child == parseInt(depoiBX.children.length - 3)){
-                    buttonS.style.display = 'none';
-                } else {
-                    buttonP.style.display = '';
-                }
-                return ;
+        //console.log(child);
+        if (child > prev && child < depoiBX.children.length + 1 && !(depoiBX.children[child] instanceof HTMLButtonElement) && depoiBX.children[child].style.display == 'none' ) {
+            prev = parseInt(child) - 1;
+            next = parseInt(child) + 1;
+
+            depoiBX.children[child].style.display = '';
+            buttonP.style.display = '';
+            
+            if (depnum == 0) {
+                depoiBX.children[prev].style.display = 'none';
             }
+            else {
+                depoiBX.children[prev - depnum].style.display = 'none';
+            }
+            if (next == depoiBX.children.length - 2) {
+                buttonS.style.display = 'none';
+            }
+            return ;
         }
     }
 }
 
 function showPrv(e) {
-    let count = 0
-    prev = 0
-    for (child in depoiBX.children) {
-        if (child < depoiBX.children.length + 1 && depoiBX.children[child] != HTMLButtonElement) {
-            if (depoiBX.children[child].style.display == 'none') {
-                console.log('count: ' + count);
-                count += 1;
-            }
-        }
-        if (count > 0 && child < depoiBX.children.length + 1 && child == count + depnum) {
-            if (depoiBX.children[child].style.display == '') {
-                console.log('here');
-                depoiBX.children[child - (depnum + 1)].style.display = '';
-                depoiBX.children[child].style.display = 'none';
-            }
-        }
-        if (window.getComputedStyle(depoiBX.children[0]).display == 'block')  {
-            console.log('here 2');
+    if (depnum == 2) {
+        prev -= depnum;
+        next -= depnum - 1;
+
+        if (prev < 0)
+            prev = 0
+
+        let child = prev + 1;
+
+        if (child <= next && child >= prev && child < depoiBX.children.length + 1 && !(depoiBX.children[child] instanceof HTMLButtonElement) && depoiBX.children[child].style.display == 'none' ) {
+            depoiBX.children[prev].style.display = '';
+            depoiBX.children[next].style.display = 'none';
             buttonS.style.display = '';
-            buttonP.style.display = 'none';
+
+            if (prev == 0) {
+                next = 0;
+                buttonP.style.display = 'none';
+            }
+            return ;
         }
     }
+    else if (depnum == 0) {
+        prev -= depnum;
+        next -= depnum;
+
+        if (prev < 0)
+            prev = 0;
+
+        let child = prev + 1;
+
+        if (child <= next && child >= prev && child < depoiBX.children.length + 1 && !(depoiBX.children[child] instanceof HTMLButtonElement)) {
+            depoiBX.children[prev].style.display = '';
+            buttonS.style.display = '';
+                
+            depoiBX.children[child].style.display = 'none';
+            if (prev != 0) {
+                prev -= 1
+                next -= 1
+                return
+            }
+            if (prev == 0) {
+                next = 0;
+                buttonP.style.display = 'none';
+            }
+            return ;
+        }
+    }
+
+
+    
 }
