@@ -116,6 +116,9 @@ h3
     display: block;
 }
 
+.userBtn span {
+    font-size: 0.7rem;
+}
 
 .hbar a .list-group-item
 {
@@ -188,9 +191,12 @@ h3
 
 #admButton
 {
-    margin: 0 5px;
+    display: flex;
+    align-items: center;
+    margin: 0 0.5rem;
     background-color: tomato;
     font-weight: bold;
+    font-size: 0.8rem;
 }
 
 #admButton:hover
@@ -623,12 +629,13 @@ p .smallBR {
         margin: 0 1vw;
     }
 
-    .hbar{
-        display: none;
+    .hbar .mPgbr.list-group.list-group-horizontal.d-flex.justify-content-center{
+        display: none !important;
     }
 
     .hbarbtn {
         display: flex;
+        justify-content: center;
     }
 
     .userBtn svg {
@@ -746,14 +753,6 @@ p .smallBR {
     .difad .difBOX p {
         /*border: #FD288D solid 1px;*/
         font-size: 0.65rem;
-    }
-
-    .hbar{
-        display: none;
-    }
-
-    .hbarbtn {
-        display: flex;
     }
 
     .smalltxtimg {
@@ -981,7 +980,10 @@ p .smallBR {
 
 @media screen and (max-width: 433px) {
     .loginStuff .list-group-item.rounded {
-        border: black 1px solid;
+        font-size: 0.5rem;
+    }
+
+    #admButton span {
         font-size: 0.5rem;
     }
 

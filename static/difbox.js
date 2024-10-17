@@ -9,9 +9,13 @@ let next = 0
 window.onload = function() {
     if (depoiBX.scrollWidth < 600) {
         depnum = 0;
+        prev = 0;
+        next = 0;
     }
     else {
-        depnum = 0
+        depnum = 2
+        prev = 0;
+        next = 0;
     }
     reRen()
 }
@@ -19,9 +23,13 @@ window.onload = function() {
 window.onresize = function() {
     if (depoiBX.scrollWidth < 600) {
         depnum = 0;
+        prev = 0;
+        next = 0;
     }
     else {
-        depnum = 2
+        depnum = 2;
+        prev = 0;
+        next = 0;
     }
     reRen()
 }
