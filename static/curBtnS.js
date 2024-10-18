@@ -85,7 +85,6 @@ for (child in arrHM) {
         hOcol.appendChild(hOptions);
 
         function hshowCourses(e) {
-            console.log('im here');
             if (hOptions.style.display != 'flex') { 
                 //e.target.style.backgroundColor = 'rgb(255, 240, 255)';
                 hOptions.style.display = 'flex';
@@ -103,8 +102,7 @@ for (child in arrHM) {
 let hOwrpI = document.querySelector('.hOwrp');
 
 function showHb(e) {
-    console.log('hbtn');
-    if (e.target.className == 'btn btn-primary hbarbtn') {
+    if (!hOrow.contains(e.target)) {
         if (hOwrpI.style.display == '') {
             hOwrpI.style.display = 'none';
         }
@@ -128,6 +126,7 @@ cOptions.style.flexDirection = 'column';
 cOptions.style.backgroundColor = 'rgb(255, 240, 255)';
 cOptions.style.color = 'rgba(38,59,78,255)';
 cOptions.style.fontWeight = 'bold';
+cOptions.style.zIndex = '10';
 //cOptions.innerText = '';
 
 let opt1 = document.createElement('a');
@@ -136,7 +135,7 @@ opt1.innerText = 'ENEM';
 opt1.style.color = 'inherit';
 opt1.style.margin = '5% 5%';
 opt1.style.borderBottom = 'gray solid 2pt';
-opt1.style.zIndex = '2';
+opt1.style.zIndex = '10';
 
 let opt2 = document.createElement('a');
 opt2.href = '/aPages/Particulares';
@@ -144,7 +143,7 @@ opt2.innerText = 'Particular';
 opt2.style.color = 'inherit';
 opt2.style.margin = '5% 5%';
 opt2.style.borderBottom = 'gray solid 2pt';
-opt2.style.zIndex = '2';
+opt2.style.zIndex = '10';
 
 cursButton.appendChild(cOptions);
 cOptions.appendChild(opt1);

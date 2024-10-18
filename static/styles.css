@@ -74,12 +74,16 @@ h3
 }
 
 .advPnls{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
     max-width: 100%;
     margin: 0 0;
 }
 
 .advPnls img {
     max-width: 100%;
+    margin: 0 0;
 }
 
 .hbar
