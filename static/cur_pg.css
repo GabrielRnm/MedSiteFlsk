@@ -1,25 +1,33 @@
 body {
-    background-color: #fdefdd;
+    background-color: #e6e6e6;
 }
 
 .cur_headrNoIMG {
     background-image: url(assets/images/BgImageH.png);
     background-position: center;
+    -webkit-filter: blur(80px);
     height: 150px;
     width: 100%;
     position: absolute;
-    filter: brightness(0.75);
+    filter: brightness(0.75) blur(1px);
     z-index: -1;
 }
 
 .curHmain {
     position: relative;
+    display: flex;
+    margin-bottom: 1rem;
+    justify-content: center;
+}
+
+.curHmain .logregoutbox.list-group.list-group-flush.list-group-horizontal {
+    left: 6rem;
 }
 
 .curHmain .cursTl {
     position: absolute;
-    left: 41%;
     line-height: 150px;
+    font-size: 3rem;
 }
 
 .curHmain a {
@@ -42,35 +50,43 @@ body {
 
 .crsCntntWrap {
     background-color: white;
-    border: black solid;
+    border: rgb(219, 219, 219) solid;
     margin: 0 auto;
     width: 95%;
-    height: 1500px;
+    height: fit-content;
     display: block;
     overflow: hidden;
 }
 
 .crsCntntVid {
-    border: rgb(245, 4, 4) solid;
+    display: grid;
+    border: rgb(189, 189, 189) solid 1px ;
+    border-radius: 5%;
     margin: 0px 5px;
     width: 60%;
-    height: 35%;
+    height: 28rem;
     float: left;
     margin-bottom: 1%;
+}
+
+.crsCntntVid h6 {
+    float: none; 
+    justify-self: center;
 }
 
 .crsCntntVid iframe {
     display: block;
     width: 100%;
-    height: 90%;
+    height: 24rem;
     position: relative;
 }
 
 .crsCntntList {
     background-color: rgb(167, 180, 184) ;
-    border: rgb(94, 255, 0) solid;
+    border: rgb(145, 151, 153) solid;
+    border-radius: 2%;
     margin: 0px 5px;
-    height: 35%;
+    height: 28rem;
     width: 20%;
     scrollbar-width: 100%;
     float: right;
@@ -129,8 +145,9 @@ body {
 
 .descMn {
     color: red;
-    display: flex;
-    border: blue solid;
+    display: none; /*flex*/
+    border: rgb(204, 204, 204) solid;
+    border-radius: 1%;
     margin: 1%;
     width: 98%;
 }
@@ -149,10 +166,10 @@ body {
 }
 
 .docBw {
-    border: rgb(255, 41, 41) 2px solid;
+    border: rgb(255, 164, 164) 2px solid;
     background-color: rgb(233, 117, 128);
     color: antiquewhite;
-    width: 40%;
+    width: 60%;
     height: 50px;
     margin: 20px 5px;
     display: block;

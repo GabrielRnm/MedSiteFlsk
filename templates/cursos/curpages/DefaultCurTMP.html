@@ -56,21 +56,21 @@
             #}
 
             {% block headerbar %}
-                TEST
             {% endblock%}
         </div>
         <main>
             <div class="crsCntntWrap">
-                Before The content
                 <hr>
                 {% if isFile is false %}
                     {% if session["isAdmin"] %}
-                    <div class="docBw">
-                        <a id='docAddbtn'>
-                            <i class="bi bi-file-earmark-arrow-up-fill"></i>
-                            <span>UPLOAD</span>
-                        </a>
-                    </div>
+                        {% if noClasses is false  %}
+                            <div class="docBw">
+                                <a id='docAddbtn'>
+                                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                                    <span>UPLOAD</span>
+                                </a>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
 

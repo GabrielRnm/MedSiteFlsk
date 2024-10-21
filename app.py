@@ -540,11 +540,11 @@ def coursePgRdr(course, clss:1):
 
             
             if (module.file == True):
-                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, fPath=fPath)
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, fPath=fPath, noClasses=False)
             else:
-                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content)
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, noClasses=False)
         else:
-            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName,isFile=False, aulas=aulas, course=course)
+            return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName,isFile=False, aulas=aulas, course=course, noClasses=True)
     else:
         return render_template("/cursos/curpages/curNoN.html")
 
