@@ -1,5 +1,5 @@
 import os.path
-import mysql.connector
+import pymysql
 import numpy
 import shutil
 import sqlite3
@@ -28,8 +28,6 @@ config = {
     "user": 'root',
     "password": 'root',
     "database": 'medusrmain',
-    "raise_on_warnings": True,
-    "connection_timeout": 28800,
 }
 
 # Database connection
@@ -37,37 +35,40 @@ db = connect_to_mysql(config)
 
 print(db)
 
-cur = db.cursor(buffered=True)
-cur.execute("SET SESSION MAX_EXECUTION_TIME=30000")
+dbcursor = db.cursor()
 
 
-print(cur)
+print(dbcursor)
 for table_name in TABLES:
     table_description = TABLES[table_name]
     try:
         print("Creating table {}: ".format(table_name), end='')
-        cur.execute(table_description)
-    except mysql.connector.Error as err:
-        if err.errno == mysql.connector.errorcode.ER_TABLE_EXISTS_ERROR:
-            print("already exists.")
-        else:
-            print(err.msg)
+        dbcursor.execute(table_description)
+    except pymysql.Error as err:
+        print(err)
     else:
         print("OK")
-
-
 
 def sSRec():
     print("Session is:", session["usr_id"])
     return 0
 
 def dbRec():
-    print(Back.GREEN + "MYSQL IS : {}".format(db.is_connected()) + Style.RESET_ALL)
-    try: 
-        db.reconnect(10, 2)
+    global db
+    if (db.open == True):
+        print(Back.GREEN + "MYSQL IS : CONNECTED" + Style.RESET_ALL)
+        return
+    else:
+        print(Back.YELLOW + "MYSQL IS : CLOSED" + Style.RESET_ALL)
+    try:
+        print(Back.LIGHTGREEN_EX + "Attempting Reconnecction" + Style.RESET_ALL)
+        db.ping(reconnect=True)
     except Exception as e:
         print(Back.RED +"DBREC ERROR: {}".format(e) + Style.RESET_ALL)
     finally:
+        if (db.open != True):
+            db = connect_to_mysql(config)
+            print('MYSQL COULDNT RECCONECT, new connection has been created')
         return
 
 
@@ -123,7 +124,7 @@ def advPage(type):
 @loginRequired
 def usrMainPage():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     print(Session)
     isAdmin = session.get("isAdmin", False)
     if isAdmin != True:
@@ -133,7 +134,7 @@ def usrMainPage():
         cursos = dbcursor.fetchall()
         # print(len(cursos))
         dbcursor.close()
-        db.disconnect()
+        
         if len(cursos) > 0:
             return render_template("MainPageUsr.html", cursos=cursos)
         else:
@@ -144,7 +145,6 @@ def usrMainPage():
         dbcursor.execute("SELECT * FROM curso")
         cursos = dbcursor.fetchall()
         dbcursor.close()
-        db.disconnect()
         return render_template("MainPageUsr.html", cursos=cursos)
 
 @app.route("/adminMainPage")
@@ -161,7 +161,7 @@ def adminMainPage():
 @isAdminPage
 def classMCreate():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     # New Class / Document
     clssTyp = request.form.get('type')
 
@@ -198,7 +198,7 @@ def classMCreate():
 
         #concur.execute("CREATE TABLE ?(numID integer primary key, file boolean, content, doc)", crsNM)
         dbcursor.close()
-        db.disconnect()
+        
 
         """
         with open('static/assets/upload/cursos/{}/{}.py'.format(crsNMB, crsNMB), "r+") as file:
@@ -284,12 +284,12 @@ def classMCreate():
             file.write('\n\nMclass_{} = ClssCnt(True, "{}", "{}")'.format(idenC[0], clssLink, filename))
         
         dbcursor.close()
-        db.disconnect()
+        
         return redirect("/coursePgRdr/{}/1".format(course))
     
     else:
         dbcursor.close()
-        db.disconnect
+        db.close
         return '????'
 
 @app.route("/classMDel", endpoint="class_m_del", methods=["POST"])
@@ -297,7 +297,7 @@ def classMCreate():
 @isAdminPage
 def classMDel():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     classI = request.form['id']
     # List
     # 1 - DELETE MYSQL ROW
@@ -313,7 +313,7 @@ def classMDel():
         dbcursor.execute("UPDATE classes SET c_a_id = c_a_id - 1 WHERE c_a_id > %s", (idE_ac,))
         db.commit()
         dbcursor.close()
-        db.disconnect()
+        
     # 3 - DELETE FILES ?
         idE_cN = str(idE[3][:-3])
 
@@ -349,7 +349,7 @@ def classMDel():
 @isAdminPage
 def coursMEdit():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsProfs = request.form['prof']
@@ -366,7 +366,7 @@ def coursMEdit():
     )
     db.commit()
     dbcursor.close()
-    db.disconnect()
+    
     return redirect("/coursMList")
 
 @app.route("/coursMList", endpoint="cours_m_list", methods=["GET"])
@@ -374,15 +374,20 @@ def coursMEdit():
 @isAdminPage
 def coursMList():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+
+    dbcursor = db.cursor()
+
     dbcursor.execute("SELECT * FROM curso")
     cursos = dbcursor.fetchall()
-    dbcursor.execute("SELECT COUNT(*) FROM curso")
-    cursoC = dbcursor.fetchall()
-    #dbcursor.close()
-    #db.disconnect()
-    return render_template("/cursos/coursPageCreate.html", cursos=cursos, cursoC=cursoC, cursoCs = 100 + int((cursoC[0][0]) * 2) )
+    print("CURSOS: {}".format(cursos))
 
+    dbcursor.execute("SELECT COUNT(*) FROM curso")
+    cursoC = dbcursor.fetchone()
+    print("CURSOS COUNT : {}".format(cursoC))
+
+    dbcursor.close()
+
+    return render_template("/cursos/coursPageCreate.html", cursos=cursos, cursoC=cursoC, cursoCs = 100 + int((cursoC[0]) * 2) )
 
 
 @app.route("/coursMCreate", endpoint="cours_m_create", methods=["POST"])
@@ -404,11 +409,8 @@ def coursMCreate():
         return pageApology("None type detection", 400)
     print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
 
-    print(Back.BLUE + 'IS THIS SHIT CONNECTED : {}'.format(db.is_connected()) + Style.RESET_ALL)
-
     dbRec()
-    dbcursor = db.cursor(buffered=True)
-    db.autocommit = False
+    dbcursor = db.cursor()
     try:
         for i, name in enumerate(newCrsNames):
             if (name == ''):
@@ -421,34 +423,30 @@ def coursMCreate():
                 checkF = os.path.isdir('templates/cursos/curpages/{}'.format(nameB))
                 checkF1 = os.path.isdir('static/assets/upload/cursos/{}'.format(nameB))
 
+                
+
                 dbcursor.execute("SELECT cur_name FROM curso WHERE cur_name=%s", (name,))
                 chkCrsEx = dbcursor.fetchone()
 
-                print(newCsrIds[i])
-                print(name)
-                print(newCrsProfs[i])
-                print(newCrsPrices[i])
-
-                valP = newCrsProfs[i]
-                valPR = newCrsPrices[i]
-
-                if (valP is None):
-                    valP = ''
-
-                if (valPR is None):
-                    valPR = ''
-
                 if (chkCrsEx is None) or (len(chkCrsEx) < 1):
-                    break
-                    dxcursor.execute(
+                    print("VALUES ABOUT TO BE INSERTED")
+                    print(newCsrIds[i])
+                    print(name)
+                    print(newCrsProfs[i])
+                    print(newCrsPrices[i])
+
+                    dbcursor.execute(
                         "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)",
                         (
                             newCsrIds[i],
                             name,
-                            valP,
-                            valPR,
+                            newCrsProfs[i],
+                            newCrsPrices[i],
                         )
                     )
+
+                    db.commit()
+                    
                 else:
                     print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
                 
@@ -462,15 +460,12 @@ def coursMCreate():
                     break
                     os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
     except Exception as e:
+        dbcursor.ping(reconnect=True)
         print(Back.YELLOW + 'coursMCREATE EXCEPTION : {}'.format(e))
-        print("coursMCREATE commit failure attempting reconnection.")
-        dbRec()
+        print("coursMCREATE commit failure attempting reconnection." + Style.re)
     finally:
-        db.commit()
-        db.autocommit = True
-        #dbcursor.close()
-        #db.disconnect()
-    return redirect("/coursMList")
+        dbcursor.close()
+        return redirect("/coursMList")
 
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
@@ -478,7 +473,7 @@ def coursMCreate():
 @isAdminPage
 def deleteCourse():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     id = request.form.get("id")
 
     dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s", (id,))
@@ -512,7 +507,7 @@ def deleteCourse():
         shutil.rmtree('static/assets/upload/cursos/{}'.format(curNMB), ignore_errors=True)
     
     dbcursor.close()
-    db.disconnect()
+    
     return redirect("/coursMList")
 
 
@@ -520,14 +515,14 @@ def deleteCourse():
 @loginRequired
 def coursePgRdr(course, clss:1):
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     if session["isAdmin"] == False:
         dbcursor.execute("SELECT * FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", (course, session["usr_id"]))
         chkU = dbcursor.fetchone()
         chkU = chkU # Check later if its necessary but just to avoid mysql delaying stuff
         if chkU is None:
             dbcursor.close()
-            db.disconnect()
+            
             return redirect("/usrMainPage")
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", ((course,))) # originally crs
@@ -546,7 +541,7 @@ def coursePgRdr(course, clss:1):
         aulas = aulas # fixes the bug for deleted classes still appearing
 
         dbcursor.close()
-        db.disconnect()
+        
 
         if (len(clssCNT) > 0):
             clssCNT = clssCNT[0]
@@ -566,6 +561,8 @@ def coursePgRdr(course, clss:1):
         else:
             return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName,isFile=False, aulas=aulas, course=course, noClasses=True)
     else:
+        dbcursor.close()
+        
         return render_template("/cursos/curpages/curNoN.html")
 
 
@@ -574,7 +571,7 @@ def coursePgRdr(course, clss:1):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     if request.method == "POST":
         # Variables for making it easier to type
         f_password = request.form.get("password")
@@ -626,12 +623,12 @@ def login():
             session["email"] = row[2]
 
             dbcursor.close()
-            db.disconnect()
+            
 
             return redirect("/")
     else:
         dbcursor.close()
-        db.disconnect()
+        
         return render_template("login.html")
 
 ## ADMIN REGISTER EDIT USER FUNCTIONS ##
@@ -641,7 +638,7 @@ def login():
 @isAdminPage
 def usrMList():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     dbcursor.execute("SELECT * FROM user")
     alunos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM user")
@@ -668,7 +665,7 @@ def aUsrReg():
     print("New Course Rows: ", newUsrNames)
 
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     db.autocommit = False
     try:
         for i, ids in enumerate(newUsrIds):
@@ -695,7 +692,7 @@ def aUsrReg():
     except Exception as e:
         print('674 EXCEPTION ' + e)
         print("675 commit failure attempting reconnection.")
-        db.reconnect(attempts=100)
+        db.ping(reconnect=True)
         if db.is_connected() == False:
             print(" 678 Reconnection failed.")
         else:
@@ -704,7 +701,7 @@ def aUsrReg():
         db.commit()
         db.autocommit = True
         dbcursor.close()
-        db.disconnect()
+        
         
         return redirect("/usrMList")
 
@@ -715,7 +712,7 @@ def aUsrReg():
 @isAdminPage
 def usrCRSreg():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     id = request.form.get('id').split(',')
     detN = request.form['detNmb']
     if int(detN) == 1:
@@ -756,7 +753,7 @@ def usrCRSreg():
         )
         db.commit()
     dbcursor.close()
-    db.disconnect()
+    
     return ("request...")
 
 @app.route("/deleteUser", endpoint="usr_del_reg", methods=["POST"])
@@ -765,7 +762,7 @@ def usrCRSreg():
 @isAdminPage
 def deleteUser():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     detN = int(request.form['detNmb'])
     if detN == 0:
         id = request.form.get("id")
@@ -779,7 +776,7 @@ def deleteUser():
         dbcursor.execute("UPDATE user SET usr_id = usr_id - 1 WHERE usr_id > %s", ((id,)))
         db.commit()
         dbcursor.close()
-        db.disconnect()
+        
 
     elif detN == 1:
         id = request.form.get("id")
@@ -810,7 +807,7 @@ def deleteUser():
             db.commit()
             curcount += 1
         dbcursor.close()
-        db.disconnect()
+        
     return redirect("/usrMList")
 
 
@@ -819,7 +816,7 @@ def deleteUser():
 @loginRequired
 def sndLogoutRq(id, detnmb = False):
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     if detnmb == False:
         for i, ids in enumerate(id):
             if session["usr_id"] == ids:
@@ -838,7 +835,7 @@ def sndLogoutRq(id, detnmb = False):
 @isAdminPage
 def AuserMEdit():
     dbRec()
-    dbcursor = db.cursor(buffered=True)
+    dbcursor = db.cursor()
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsEmail = request.form['email']
@@ -859,7 +856,7 @@ def AuserMEdit():
     )
     db.commit()
     dbcursor.close()
-    db.disconnect()
+    
     return redirect("/usrMList")
 
 
@@ -871,7 +868,7 @@ def AuserMEdit():
 @app.route("/register", methods=["GET", "POST"])
 def register():   
     dbRec()
-    dbcursor = db.cursor(buffered=True) 
+    dbcursor = db.cursor() 
     if request.method == "POST":
         dbcursor.execute("SELECT COUNT(usr_id) FROM user")
         uCnt = dbcursor.fetchone()
@@ -935,12 +932,12 @@ def register():
                         )
                     db.commit()
                     dbcursor.close()
-                    db.disconnect()
+                    
                     return redirect("/")
     # GET
     else:
         dbcursor.close()
-        db.disconnect()
+        
         return render_template("register.html")
     
 @app.route("/logout")

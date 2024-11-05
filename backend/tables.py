@@ -1,5 +1,5 @@
 from __future__ import print_function
-import mysql.connector
+import pymysql
 
 
 DB_NAME = 'medusrmain'
