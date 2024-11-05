@@ -7,6 +7,9 @@ const vAulaB = document.querySelector('.VideoAula');
 const Vform = document.querySelector('.VAForm');
 const Dform = document.querySelector('.DAForm');
 const DformB = document.querySelector('#DFormB');
+const subs = document.querySelectorAll('button[type="submit"]');
+
+subs.forEach(element => element.addEventListener('click', popupGone));
 
 const sideb = document.querySelector('.popup-sideb');
 let biter = document.createElement('div');
@@ -28,9 +31,9 @@ for (let i = 0; i < delbtncls.length; i++) {
 }
 
 function addClssRow(e) {
-    if (e.target == buttonAddDoc) {
-        $(popupD).fadeIn()
-        DformB.style.display = 'block'
+    if (e.target.id != 'classAddbtn') {
+        $(popupD).fadeIn();
+        DformB.style.display = 'block';
     }
     else {
         $(popup).fadeIn();
@@ -60,6 +63,11 @@ function PopAct(e) {
         Dform.style.display = 'block'
     }
     console.log(classNames);
+}
+
+function popupGone(e) {
+    popup.style.display = 'none';
+    popupD.style.display = 'none';
 }
 
 let allClass = document.getElementsByClassName('delbtncls');

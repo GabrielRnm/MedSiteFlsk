@@ -318,6 +318,7 @@
                     confirmButton.classList.add("btn", "btn-outline-success");
                     confirmButton.id = "ConfirmBtn";
                     confirmButton.onclick = function() {
+                        confirmButton.style.display = 'none'
                         const courseData = {
                             id : document.querySelector('input[name="NcrsId"]').value,
                             name: document.querySelector('input[name="NcrsName"]').value,
@@ -334,6 +335,21 @@
                             },
                             body: new URLSearchParams(courseData),
                         })  
+                        .then(response => {
+                            if (response.ok) {
+                                // Handle the successful response from Flask
+                                console.log('Course added successfully');
+                                // Refresh the page or update the UI as needed
+                            } 
+                            else {
+                                // Handle the error response from Flask
+                                console.error('Failed to add course');
+                            }
+                        })
+                        .catch(error => {
+                            // Handle any errors that occur during the request
+                            console.error(error);
+                        });
                     }
                     buttoncontainer.appendChild(confirmButton);
                 }        

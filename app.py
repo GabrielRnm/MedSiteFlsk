@@ -2,6 +2,7 @@ import os.path
 import mysql.connector
 import numpy
 import shutil
+import sqlite3
 from backend.tables import TABLES
 from backend import dynamicHTMLS
 from backend.connection import connect_to_mysql
@@ -11,6 +12,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for, ses
 from flask_session import Session
 from importlib import import_module
 from werkzeug.utils import secure_filename
+from colorama import Back, Style
 
 
 
@@ -60,12 +62,11 @@ def sSRec():
     return 0
 
 def dbRec():
+    print(Back.GREEN + "MYSQL IS : {}".format(db.is_connected()) + Style.RESET_ALL)
     try: 
-        db.reconnect()
+        db.reconnect(10, 2)
     except Exception as e:
-        print(e)
-        db.connect()
-        db.reconnect(10, 1)
+        print(Back.RED +"DBREC ERROR: {}".format(e) + Style.RESET_ALL)
     finally:
         return
 
@@ -76,6 +77,7 @@ def ytEMB(Ylink:str):
         newlink = 'https://www.youtube.com/embed/' + Ycode + '?'
         return newlink
     elif Ylink.startswith('https://www.youtube.com/live') == True or Ylink.startswith('youtube.com/live') == True:
+        print('ITS A LIVESTREAM')
         Ycode = Ylink.split('live/')[1]
         newlink = 'https://www.youtube.com/embed/' + Ycode + '?'
         return newlink
@@ -190,6 +192,15 @@ def classMCreate():
 
         objname = 'Mclass_{}'.format(clssMn)
 
+        #con = sqlite3.connect("static/assets/upload/cursos/classL.db")
+        #print('CON IS: {}'.format(con))
+        #concur = con.cursor()
+
+        #concur.execute("CREATE TABLE ?(numID integer primary key, file boolean, content, doc)", crsNM)
+        dbcursor.close()
+        db.disconnect()
+
+        """
         with open('static/assets/upload/cursos/{}/{}.py'.format(crsNMB, crsNMB), "r+") as file:
             fileR = file.readlines(0)
             file.seek(0)
@@ -207,8 +218,7 @@ def classMCreate():
                     print('LINE NEW:', iNew)
                     file.write(iNew)
             file.truncate()
-        dbcursor.close()
-        db.disconnect()
+        """
         return redirect("/coursePgRdr/{}/1".format(course))
 
     elif int(clssTyp) == 0: # 0 = Link
@@ -217,6 +227,7 @@ def classMCreate():
         clssTitle = request.form.get('classtitle0')
         clssFile = request.files['docF']
 
+        print(clssLink)
         clssLink = ytEMB(clssLink)
 
         print(clssLink)
@@ -246,7 +257,7 @@ def classMCreate():
             (
                 a_idC + 1,
                 c_a_idC + 1,
-                ('{}.py'.format(crsNMB)),
+                ('{}'.format(crsNMB)),
                 clssTitle,
                 course,
             )
@@ -264,7 +275,7 @@ def classMCreate():
 
         if (filename == None or filename == ''):
             file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
-            file.write('\n\nMclass_{} = ClssCnt(False, "{}")'.format(idenC[0], clssLink))
+            file.write('\nMclass_{} = ClssCnt(False, "{}")'.format(idenC[0], clssLink))
             file.close()
         else:
             clssFile.save(os.path.join('static/assets/upload/cursos/{}'.format(crsNMB), filename))
@@ -368,17 +379,17 @@ def coursMList():
     cursos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM curso")
     cursoC = dbcursor.fetchall()
-    dbcursor.close()
-    db.disconnect()
+    #dbcursor.close()
+    #db.disconnect()
     return render_template("/cursos/coursPageCreate.html", cursos=cursos, cursoC=cursoC, cursoCs = 100 + int((cursoC[0][0]) * 2) )
+
 
 
 @app.route("/coursMCreate", endpoint="cours_m_create", methods=["POST"])
 @loginRequired
 @isAdminPage
 def coursMCreate():
-    dbRec()
-    dbcursor = db.cursor(buffered=True)
+    
     # Criar curso por function Sendo que Só admin pode criar
     # Ao mesmo tempo que vai criar o curso no databank tem que criar um html do curso
     # Tem que deixar eles editarem tudo sobre o curso tbm :/
@@ -388,19 +399,20 @@ def coursMCreate():
     newCrsPrices = request.form.getlist("NcrsPrice")
 
     if newCsrIds == None or newCsrIds == '':
-        dbcursor.close()
-        db.disconnect()
         return pageApology("None type detection", 400)
     if newCrsNames == None or newCrsNames == '':
-        dbcursor.close()
-        db.disconnect()
         return pageApology("None type detection", 400)
-    # print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
+    print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
 
+    print(Back.BLUE + 'IS THIS SHIT CONNECTED : {}'.format(db.is_connected()) + Style.RESET_ALL)
+
+    dbRec()
+    dbcursor = db.cursor(buffered=True)
+    db.autocommit = False
     try:
         for i, name in enumerate(newCrsNames):
             if (name == ''):
-                pass
+                break
             else:
                 # Take out extra spaces accidentaly typed
                 name = name.strip()
@@ -412,46 +424,53 @@ def coursMCreate():
                 dbcursor.execute("SELECT cur_name FROM curso WHERE cur_name=%s", (name,))
                 chkCrsEx = dbcursor.fetchone()
 
-                if chkCrsEx is None or (len(chkCrsEx) < 1):
-                    dbcursor.execute(
+                print(newCsrIds[i])
+                print(name)
+                print(newCrsProfs[i])
+                print(newCrsPrices[i])
+
+                valP = newCrsProfs[i]
+                valPR = newCrsPrices[i]
+
+                if (valP is None):
+                    valP = ''
+
+                if (valPR is None):
+                    valPR = ''
+
+                if (chkCrsEx is None) or (len(chkCrsEx) < 1):
+                    break
+                    dxcursor.execute(
                         "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)",
                         (
                             newCsrIds[i],
                             name,
-                            newCrsProfs[i],
-                            newCrsPrices[i],
+                            valP,
+                            valPR,
                         )
                     )
-                    db.commit()
-                    
                 else:
                     print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
                 
-                dbcursor.close()
-                db.disconnect()
-
                 # Better to do this after so if the database injection fails we dont create unecessary files
                 if (checkF == False):
+                    break
                     os.mkdir('templates/cursos/curpages/{}'.format(nameB))
                     file = open('templates/cursos/curpages/{}/{}.html'.format(nameB, nameB), 'x')
                     file.write(dynamicHTMLS.exHtml)
                 if (checkF1 == False):
+                    break
                     os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
-                    file = open('static/assets/upload/cursos/{}/{}.py'.format(nameB, nameB), "x")
-                    file.write("from backend.clssType import ClssCnt \n")
-
-
-            # Now we need to do the same But this time we will be creating TABLES for the courses
-            # Each TABLE will have Classes which hold the links to their courses content, god this sucks
-            # now we are gonna need to remake that file system to also make folders each for a course that gets added
-            # maybe i should look into how other courses do this i really do not wanna mess this up cuz its one mistake
-            # and then i gotta do it all over again.
-            # Dont forget the deleteCourse function will need to go over everything else too!
-    except TypeError as e:
-        print(e)
-        print("commit failure check Course creation function.")
+    except Exception as e:
+        print(Back.YELLOW + 'coursMCREATE EXCEPTION : {}'.format(e))
+        print("coursMCREATE commit failure attempting reconnection.")
+        dbRec()
     finally:
-        return redirect("/coursMList")
+        db.commit()
+        db.autocommit = True
+        #dbcursor.close()
+        #db.disconnect()
+    return redirect("/coursMList")
 
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
@@ -488,13 +507,14 @@ def deleteCourse():
     if (checkF == True):
         shutil.rmtree('templates/cursos/curpages/{}'.format(curNMB), ignore_errors=True)
 
-    checkF = os.path.isdir('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]))
+    checkF = os.path.isdir('static/assets/upload/cursos/{}'.format(curNMB))
     if (checkF == True):
-        shutil.rmtree('static/assets/upload/cursos/{}'.format(clsEX[4][:-3]), ignore_errors=True)
+        shutil.rmtree('static/assets/upload/cursos/{}'.format(curNMB), ignore_errors=True)
     
     dbcursor.close()
     db.disconnect()
     return redirect("/coursMList")
+
 
 @app.route("/coursePgRdr/<course>/<clss>", endpoint="cours_redir_pg", methods=["GET"])
 @loginRequired
@@ -931,7 +951,7 @@ def logout():
     session.clear()
 
     # Redirect user to login form
-    return redirect("/")
+    return redirect("/") 
 
 
 
