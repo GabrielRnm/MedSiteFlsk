@@ -1,5 +1,5 @@
 import os.path
-import _mysql_connector
+import mysql.connector
 import numpy
 import shutil
 import sqlite3
@@ -28,6 +28,7 @@ config = {
     "user": 'root',
     "password": 'root',
     "database": 'medusrmain',
+    "raise_on_warnings": True,
 }
 
 # Database connection
@@ -44,7 +45,7 @@ for table_name in TABLES:
     try:
         print("Creating table {}: ".format(table_name), end='')
         dbcursor.execute(table_description)
-    except pymysql.Error as err:
+    except mysql.connector.Error as err:
         print(err)
     else:
         print("OK")
@@ -55,20 +56,20 @@ def sSRec():
 
 def dbRec():
     global db
-    if (db.open == True):
+    if (db.is_connected == True):
         print(Back.GREEN + "MYSQL IS : CONNECTED" + Style.RESET_ALL)
         return
     else:
         print(Back.YELLOW + "MYSQL IS : CLOSED" + Style.RESET_ALL)
     try:
         print(Back.LIGHTGREEN_EX + "Attempting Reconnecction" + Style.RESET_ALL)
-        db.ping(reconnect=True)
+        db.reconnect(10, 1)
     except Exception as e:
         print(Back.RED +"DBREC ERROR: {}".format(e) + Style.RESET_ALL)
     finally:
-        if (db.open == False):
+        if (db.is_connected == False):
             print('MYSQL COULDNT RECCONECT, new connection has been created')
-            return pymysql.connect(**config)
+            return mysql.connector.connect(**config)
         return
 
 
@@ -289,7 +290,7 @@ def classMCreate():
     
     else:
         dbcursor.close()
-        db.close
+        db.close()
         return '????'
 
 @app.route("/classMDel", endpoint="class_m_del", methods=["POST"])
@@ -412,21 +413,24 @@ def coursMCreate():
         return pageApology("None type detection", 400)
     print("New Course Rows:", newCsrIds, newCrsNames, newCrsProfs, newCrsPrices)
 
-    dbcursor = db.cursor()
-    for i,name in enumerate(newCrsNames):
-        sql = "SELECT `cur_name` FROM `curso` WHERE `cur_name`=%s"
-        db.ping()
-        dbcursor.execute(sql, name)
-        db.commit()
+    dbRec()
+    for i in range(len(newCrsNames)):
+        print("I is : {}".format(i))
+        dbcursor = db.cursor()
+        sql = ("SELECT cur_name FROM curso WHERE cur_name=%s")
+        db.ping(reconnect=True)
+        dbcursor.execute(sql, (newCrsNames[i],))
         chkCrsEx = dbcursor.fetchone()
-        print(Back.RED + str(chkCrsEx))
-        if (chkCrsEx != None and chkCrsEx[0] == name):
-            newCrsNames.remove(name)
-            print(str(newCrsNames) + Style.RESET_ALL)
+        print(Back.RED + "CHECKING DUPLICATE : " + str(chkCrsEx))
+        if (chkCrsEx != None and chkCrsEx[0] == newCrsNames[i]):
+            newCrsNames.remove(newCrsNames[i])
+            print ("DUPLICATE REMOVED : " + str(newCrsNames) + Style.RESET_ALL)
             dbcursor.close()
             if (len(newCrsNames) <= 0):
                 return redirect("/coursMList")
-
+        else:
+            dbcursor.close()
+            
     dbcursor = db.cursor()
     for i in range(len(newCrsNames)):
         if (newCrsNames[i] != None and newCrsNames[i] != ''):
@@ -437,13 +441,13 @@ def coursMCreate():
 
             print("VALUES: \ni : {}  \nID : {} \nNAME : {} \nPROF : {} \nPRICE : {}".format(i ,newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]))
             
+            db.ping(reconnect=True)
             args = [newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]]
-            sql = "INSERT INTO `curso` (`curs_id`, `cur_name`, `prof`, `curs_price`) VALUES(%s, %s, %s, %s)"
-            db.ping()
-            dbcursor.execute(sql, args)
+            sql = ("INSERT INTO `curso` (`curs_id`, `cur_name`, `prof`, `curs_price`) VALUES(%s, %s, %s, %s)")
+            dbcursor.executemany(sql, (args,))
             db.commit()
-            """
-    
+            
+    """
     try:
             
                     

@@ -1,7 +1,6 @@
 import logging
 import time
-import pymysql
-
+import mysql.connector
 # Set up logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -22,8 +21,8 @@ def connect_to_mysql(config, attempts=3, delay=2):
     # Implement a reconnection routine
     while attempt < attempts + 1:
         try:
-            return pymysql.connect(**config)
-        except (pymysql.Error, IOError) as err:
+            return mysql.connector.connect(**config)
+        except (mysql.connector.Error, IOError) as err:
             if (attempts is attempt):
                 # Attempts to reconnect failed; returning None
                 logger.info("Failed to connect, exiting without a connection: %s", err)
