@@ -319,6 +319,7 @@
                     confirmButton.id = "ConfirmBtn";
                     confirmButton.onclick = function() {
                         confirmButton.style.display = 'none'
+                        /*
                         const courseData = {
                             id : document.querySelector('input[name="NcrsId"]').value,
                             name: document.querySelector('input[name="NcrsName"]').value,
@@ -326,7 +327,7 @@
                             price: document.querySelector('input[name="NcrsPrice"]').value,
                             // Add more fields as needed
                         };
-
+                        
                         // Send a POST request to the Flask endpoint
                         fetch('/coursMCreate', {
                             method: 'POST',
@@ -350,6 +351,25 @@
                             // Handle any errors that occur during the request
                             console.error(error);
                         });
+                        
+                        */
+                        $.ajax({
+                        type: "POST",
+                        url: "/coursMCreate",
+                        data: {
+                            "NcrsId": document.querySelector('input[name="NcrsId"]').value,
+                            "NcrsName": document.querySelector('input[name="NcrsName"]').value,
+                            "NcrsProf": document.querySelector('input[name="NcrsProf"]').value,
+                            "NcrsPrice": document.querySelector('input[name="NcrsPrice"]').value
+                        },
+                        success: function(data) {
+                            console.log("Course created successfully");
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error deleting course: ", error);
+                        }
+                    });
+                        
                     };
                     buttoncontainer.appendChild(confirmButton);
                 }        

@@ -1,5 +1,5 @@
 import os.path
-import pymysql
+import _mysql_connector
 import numpy
 import shutil
 import sqlite3
@@ -66,9 +66,9 @@ def dbRec():
     except Exception as e:
         print(Back.RED +"DBREC ERROR: {}".format(e) + Style.RESET_ALL)
     finally:
-        if (db.open != True):
-            db = connect_to_mysql(config)
+        if (db.open == False):
             print('MYSQL COULDNT RECCONECT, new connection has been created')
+            return pymysql.connect(**config)
         return
 
 
@@ -366,10 +366,9 @@ def coursMEdit():
     )
     db.commit()
     dbcursor.close()
-    
     return redirect("/coursMList")
 
-@app.route("/coursMList", endpoint="cours_m_list", methods=["GET"])
+@app.route("/coursMList", endpoint="cours_m_list")
 @loginRequired
 @isAdminPage
 def coursMList():
@@ -377,13 +376,17 @@ def coursMList():
 
     dbcursor = db.cursor()
 
-    dbcursor.execute("SELECT * FROM curso")
+    sql = "SELECT * FROM `curso`"
+    db.ping()
+    dbcursor.execute(sql)
     cursos = dbcursor.fetchall()
-    print("CURSOS: {}".format(cursos))
+    #print("CURSOS: {}".format(cursos))
 
-    dbcursor.execute("SELECT COUNT(*) FROM curso")
+    sql = "SELECT COUNT(*) FROM `curso`"
+    db.ping()
+    dbcursor.execute(sql)
     cursoC = dbcursor.fetchone()
-    print("CURSOS COUNT : {}".format(cursoC))
+    #//print("CURSOS COUNT : {}".format(cursoC))
 
     dbcursor.close()
 
@@ -407,65 +410,52 @@ def coursMCreate():
         return pageApology("None type detection", 400)
     if newCrsNames == None or newCrsNames == '':
         return pageApology("None type detection", 400)
-    print("New Course Rows:", newCrsNames, newCrsProfs, newCrsPrices)
+    print("New Course Rows:", newCsrIds, newCrsNames, newCrsProfs, newCrsPrices)
 
-    dbRec()
     dbcursor = db.cursor()
+    for i,name in enumerate(newCrsNames):
+        sql = "SELECT `cur_name` FROM `curso` WHERE `cur_name`=%s"
+        db.ping()
+        dbcursor.execute(sql, name)
+        db.commit()
+        chkCrsEx = dbcursor.fetchone()
+        print(Back.RED + str(chkCrsEx))
+        if (chkCrsEx != None and chkCrsEx[0] == name):
+            newCrsNames.remove(name)
+            print(str(newCrsNames) + Style.RESET_ALL)
+            dbcursor.close()
+            if (len(newCrsNames) <= 0):
+                return redirect("/coursMList")
+
+    dbcursor = db.cursor()
+    for i in range(len(newCrsNames)):
+        if (newCrsNames[i] != None and newCrsNames[i] != ''):
+            print(Back.CYAN + "LOOP : " + name + Style.RESET_ALL)
+            # Take out extra spaces accidentaly typed
+            name = name.strip()
+            nameB = name.replace(' ', '_')
+
+            print("VALUES: \ni : {}  \nID : {} \nNAME : {} \nPROF : {} \nPRICE : {}".format(i ,newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]))
+            
+            args = [newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]]
+            sql = "INSERT INTO `curso` (`curs_id`, `cur_name`, `prof`, `curs_price`) VALUES(%s, %s, %s, %s)"
+            db.ping()
+            dbcursor.execute(sql, args)
+            db.commit()
+            """
+    
     try:
-        for i, name in enumerate(newCrsNames):
-            if (name == ''):
-                break
-            else:
-                # Take out extra spaces accidentaly typed
-                name = name.strip()
-                nameB = name.replace(' ', '_')
-
-                checkF = os.path.isdir('templates/cursos/curpages/{}'.format(nameB))
-                checkF1 = os.path.isdir('static/assets/upload/cursos/{}'.format(nameB))
-
-                
-
-                dbcursor.execute("SELECT cur_name FROM curso WHERE cur_name=%s", (name,))
-                chkCrsEx = dbcursor.fetchone()
-
-                if (chkCrsEx is None) or (len(chkCrsEx) < 1):
-                    print("VALUES ABOUT TO BE INSERTED")
-                    print(newCsrIds[i])
-                    print(name)
-                    print(newCrsProfs[i])
-                    print(newCrsPrices[i])
-
-                    dbcursor.execute(
-                        "INSERT INTO curso (curs_id, cur_name, prof, curs_price) VALUES(%s, %s, %s, %s)",
-                        (
-                            newCsrIds[i],
-                            name,
-                            newCrsProfs[i],
-                            newCrsPrices[i],
-                        )
-                    )
-
-                    db.commit()
+            
                     
-                else:
-                    print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
-                
-                # Better to do this after so if the database injection fails we dont create unecessary files
-                if (checkF == False):
-                    break
-                    os.mkdir('templates/cursos/curpages/{}'.format(nameB))
-                    file = open('templates/cursos/curpages/{}/{}.html'.format(nameB, nameB), 'x')
-                    file.write(dynamicHTMLS.exHtml)
-                if (checkF1 == False):
-                    break
-                    os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
+            else:
+                print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
     except Exception as e:
-        dbcursor.ping(reconnect=True)
+        db.ping(reconnect=True)
         print(Back.YELLOW + 'coursMCREATE EXCEPTION : {}'.format(e))
-        print("coursMCREATE commit failure attempting reconnection." + Style.re)
-    finally:
-        dbcursor.close()
-        return redirect("/coursMList")
+        print("coursMCREATE commit failure attempting reconnection." + Style.RESET_ALL)
+        """
+    dbcursor.close()
+    return redirect("/coursMList")
 
 
 @app.route("/deleteCourse", endpoint="cours_single_delete", methods=["POST"])
@@ -701,7 +691,6 @@ def aUsrReg():
         db.commit()
         db.autocommit = True
         dbcursor.close()
-        
         
         return redirect("/usrMList")
 
@@ -949,6 +938,9 @@ def logout():
 
     # Redirect user to login form
     return redirect("/") 
+
+
+db.close()
 
 
 
