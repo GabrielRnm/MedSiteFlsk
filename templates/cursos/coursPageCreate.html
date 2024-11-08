@@ -135,7 +135,6 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-
             const cursosOG = document.getElementsByName("curcount");
             let buttoncontainer = document.querySelector(".hbuttoncontainer");
             var crsbtnadd = document.querySelector('button[name="iaddcours"]');
@@ -282,7 +281,7 @@
                         type: "POST",
                         url: "/deleteCourse",
                         data: {
-                            "id": id
+                            "id": JSON.stringify(id),
                         },
                         success: function(data) {
                             console.log("Course deleted successfully");
@@ -315,58 +314,38 @@
                     var confirmButton = document.createElement("button");
                     confirmButton.innerText = "CONFIRM";
                     confirmButton.style.margin = '0 20px'
+                    confirmButton.type = 'button'
                     confirmButton.classList.add("btn", "btn-outline-success");
                     confirmButton.id = "ConfirmBtn";
                     confirmButton.onclick = function() {
                         confirmButton.style.display = 'none'
-                        /*
-                        const courseData = {
-                            id : document.querySelector('input[name="NcrsId"]').value,
-                            name: document.querySelector('input[name="NcrsName"]').value,
-                            prof: document.querySelector('input[name="NcrsProf"]').value,
-                            price: document.querySelector('input[name="NcrsPrice"]').value,
-                            // Add more fields as needed
-                        };
+                        let idCatch = document.querySelectorAll('input[name="NcrsId"]');
+                        let nameCatch = document.querySelectorAll('input[name="NcrsName"]');
+                        let profCatch = document.querySelectorAll('input[name="NcrsProf"]');
+                        let priceCatch = document.querySelectorAll('input[name="NcrsPrice"]');
+
+                        let Entries = [] 
+
+                        console.log(idCatch)
+
+                        for (var i = 0; i < idCatch.length; i++) {
+                            Entries.push(idCatch[i].value + ' /' + nameCatch[i].value + ' /' + profCatch[i].value + ' /' + priceCatch[i].value);
+                        }
                         
-                        // Send a POST request to the Flask endpoint
-                        fetch('/coursMCreate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: new URLSearchParams(courseData),
-                        })  
-                        .then(response => {
-                            if (response.ok) {
-                                // Handle the successful response from Flask
-                                console.log('Course added successfully');
-                                // Refresh the page or update the UI as needed
-                            } 
-                            else {
-                                // Handle the error response from Flask
-                                console.error('Failed to add course');
-                            }
-                        })
-                        .catch(error => {
-                            // Handle any errors that occur during the request
-                            console.error(error);
-                        });
-                        
-                        */
+                        console.log(Entries)
+
                         $.ajax({
                         type: "POST",
                         url: "/coursMCreate",
                         data: {
-                            "NcrsId": document.querySelector('input[name="NcrsId"]').value,
-                            "NcrsName": document.querySelector('input[name="NcrsName"]').value,
-                            "NcrsProf": document.querySelector('input[name="NcrsProf"]').value,
-                            "NcrsPrice": document.querySelector('input[name="NcrsPrice"]').value
+                            "FRMdata" : JSON.stringify(Entries),
                         },
                         success: function(data) {
                             console.log("Course created successfully");
+                            location.reload();
                         },
                         error: function(xhr, status, error) {
-                            console.log("Error deleting course: ", error);
+                            console.log("Error creating course: ", error);
                         }
                     });
                         

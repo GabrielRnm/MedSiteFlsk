@@ -13,6 +13,7 @@ from flask_session import Session
 from importlib import import_module
 from werkzeug.utils import secure_filename
 from colorama import Back, Style
+from operator import methodcaller
 
 
 
@@ -31,12 +32,14 @@ config = {
     "raise_on_warnings": True,
 }
 
+classdb = "static/assets/upload/cursos/classL.db"
+
 # Database connection
 db = connect_to_mysql(config)
 
 print(db)
 
-dbcursor = db.cursor()
+dbcursor = db.cursor(buffered=True)
 
 
 print(dbcursor)
@@ -125,7 +128,7 @@ def advPage(type):
 @loginRequired
 def usrMainPage():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     print(Session)
     isAdmin = session.get("isAdmin", False)
     if isAdmin != True:
@@ -162,64 +165,13 @@ def adminMainPage():
 @isAdminPage
 def classMCreate():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     # New Class / Document
     clssTyp = request.form.get('type')
 
     if int(clssTyp) == 1: # 1 = Document/File
-        clssNmb = request.form.get('classN')
-        course = request.form.get('course')
-        clssFile = request.files['docF']
-
-        print(clssNmb)
-        print(clssFile)
-        print(clssFile.filename)
-
-        #SQL
-        dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (course,))
-        crsNM = dbcursor.fetchone()
-        crsNM = crsNM[0]
-
-        crsNMB = crsNM.replace(' ', '_')
-
-        dbcursor.execute("SELECT id FROM classes WHERE a_curs_id=%s AND c_a_id=%s", (course, clssNmb))
-        clssMn = dbcursor.fetchone()
-        clssMn = clssMn[0]
-
-        # Sudden folder switch
-        app.config['UPLOAD_FOLDER'] = 'static/assets/upload/cursos/{}'.format(crsNMB)
-        filename = secure_filename(clssFile.filename)
-        clssFile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-        objname = 'Mclass_{}'.format(clssMn)
-
-        #con = sqlite3.connect("static/assets/upload/cursos/classL.db")
-        #print('CON IS: {}'.format(con))
-        #concur = con.cursor()
-
-        #concur.execute("CREATE TABLE ?(numID integer primary key, file boolean, content, doc)", crsNM)
-        dbcursor.close()
+        print('clsstyp 1???????')
         
-
-        """
-        with open('static/assets/upload/cursos/{}/{}.py'.format(crsNMB, crsNMB), "r+") as file:
-            fileR = file.readlines(0)
-            file.seek(0)
-            for i in fileR:
-                if objname not in i:
-                    print('NOT IN I')
-                    print('obj: \n', objname)
-                    print('I: \n', i)
-                    file.write(i)
-                elif objname in i:
-                    iNew = i.replace("False", "True")
-                    iNew = iNew[:-1]
-                    iNew = iNew + ', "{}")'.format(filename)
-                    print('LINE OLD:', i)
-                    print('LINE NEW:', iNew)
-                    file.write(iNew)
-            file.truncate()
-        """
         return redirect("/coursePgRdr/{}/1".format(course))
 
     elif int(clssTyp) == 0: # 0 = Link
@@ -252,7 +204,7 @@ def classMCreate():
         dbcursor.execute("SELECT COUNT(c_a_id) FROM classes WHERE a_curs_id = %s", (course,))
         c_a_idC = dbcursor.fetchone()
         c_a_idC = int(c_a_idC[0])
-
+    
         dbcursor.execute(
             "INSERT INTO classes (a_id, c_a_id, cntnt, a_name, a_curs_id) VALUES(%s, %s, %s, %s, %s)",
             (
@@ -264,28 +216,46 @@ def classMCreate():
             )
         )
         db.commit()
-
+    
         dbcursor.execute(
             "SELECT * FROM classes WHERE a_id=%s", (a_idC + 1,)
         )
-        idenC = dbcursor.fetchall()
-        idenC = idenC[0]
+        idenC = dbcursor.fetchone()
+        
+        dbcursor.close()
+        
+        con = sqlite3.connect(classdb)
+        concur = con.cursor()
+
+        sql = """CREATE TABLE IF NOT EXISTS class 
+        (
+            cID            INT    ,
+            aID            INT    ,
+            file           BOOL     NOT NULL,
+            content        ,
+            doc
+        )"""
+
+        concur.execute(sql)
 
         filename = secure_filename(clssFile.filename)
         print('YOURE LOOKING FOR ME:', filename)
 
+    
         if (filename == None or filename == ''):
-            file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
-            file.write('\nMclass_{} = ClssCnt(False, "{}")'.format(idenC[0], clssLink))
-            file.close()
+            sql = "INSERT INTO class (cID, aID, file, content, doc) VALUES (?, ?, ?, ?, ?)"
+            argM = [course, idenC[2], False, clssLink, 'none']
+            concur.execute(sql, argM)
+            con.commit()
         else:
             clssFile.save(os.path.join('static/assets/upload/cursos/{}'.format(crsNMB), filename))
 
-            file = open("static/assets/upload/cursos/{}/{}.py".format(crsNMB, crsNMB), "a")
-            file.write('\n\nMclass_{} = ClssCnt(True, "{}", "{}")'.format(idenC[0], clssLink, filename))
-        
-        dbcursor.close()
-        
+            argM = [course, idenC[2], True, clssLink, filename]
+            sql = "INSERT INTO class (cID, aID, file, content, doc) VALUES (?, ?, ?, ?, ?)"
+            concur.execute(sql, argM)
+            con.commit()
+        concur.close()
+        con.close()
         return redirect("/coursePgRdr/{}/1".format(course))
     
     else:
@@ -298,51 +268,38 @@ def classMCreate():
 @isAdminPage
 def classMDel():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     classI = request.form['id']
+
+    con = sqlite3.connect(classdb)
+    concur = con.cursor()
+
     # List
     # 1 - DELETE MYSQL ROW
     dbcursor.execute("SELECT * FROM classes WHERE id=%s", (classI,))
     idE = dbcursor.fetchone()
     idE_ac = idE[2]
-    print(len(idE))
-
+    
     if len(idE) > 0:
         dbcursor.execute("DELETE FROM classes WHERE id=%s", (classI,))
+        concur.execute("DELETE FROM class WHERE aID=? AND cID=?", (idE_ac, idE[5]))
     # 2 - REALIGN ROWS
         dbcursor.execute("UPDATE classes SET a_id = a_id - 1 WHERE a_id > %s", (idE_ac,))
         dbcursor.execute("UPDATE classes SET c_a_id = c_a_id - 1 WHERE c_a_id > %s", (idE_ac,))
         db.commit()
         dbcursor.close()
+        concur.close()
+        con.close()
         
     # 3 - DELETE FILES ?
         idE_cN = str(idE[3][:-3])
 
-        module_name = "static.assets.upload.cursos.{}.{}".format(idE_cN, idE_cN)
-        objname = 'Mclass_{}'.format(idE[0])
-        module = from_module_get(module_name, objname)
-
-        if module.file == True:
-            fileC = os.path.isfile('static/assets/upload/cursos/{}/{}'.format(idE_cN, module.doc))
+        if idE[2] == 1:
+            fileC = os.path.isfile('static/assets/upload/cursos/{}/{}'.format(idE_cN, idE[4]))
             if fileC == True:
-                os.remove('static/assets/upload/cursos/{}/{}'.format(idE_cN, module.doc))
+                os.remove('static/assets/upload/cursos/{}/{}'.format(idE_cN, idE[4]))
             else:
-                return "File Deletion Failed : {}, {}, {}".format(objname, module.file, module.doc)
-
-    # 4 - DELETE FROM PY FILE
-        with open('static/assets/upload/cursos/{}/{}.py'.format(idE_cN, idE_cN), "r+") as file:
-            fileR = file.readlines(0)
-            file.seek(0)
-            hasF = False # So we dont have blank spaces in the course py file // Frontend now finally
-            for i in fileR:
-                if hasF == False:
-                    if objname not in i:
-                        file.write(i)
-                    else:
-                        hasF = True
-                else:
-                    hasF = False
-            file.truncate()
+                return "File Deletion Failed : {}".format(idE)
     return "OK"
 
 @app.route("/coursMEdit", endpoint="cours_m_edit", methods=["POST"])
@@ -350,7 +307,7 @@ def classMDel():
 @isAdminPage
 def coursMEdit():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsProfs = request.form['prof']
@@ -375,7 +332,7 @@ def coursMEdit():
 def coursMList():
     dbRec()
 
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
 
     sql = "SELECT * FROM `curso`"
     db.ping()
@@ -398,67 +355,61 @@ def coursMList():
 @loginRequired
 @isAdminPage
 def coursMCreate():
-    
-    # Criar curso por function Sendo que Só admin pode criar
-    # Ao mesmo tempo que vai criar o curso no databank tem que criar um html do curso
-    # Tem que deixar eles editarem tudo sobre o curso tbm :/
-    newCsrIds = request.form.getlist("NcrsId")
-    newCrsNames = request.form.getlist("NcrsName")
-    newCrsProfs = request.form.getlist("NcrsProf")
-    newCrsPrices = request.form.getlist("NcrsPrice")
-
-    if newCsrIds == None or newCsrIds == '':
-        return pageApology("None type detection", 400)
-    if newCrsNames == None or newCrsNames == '':
-        return pageApology("None type detection", 400)
-    print("New Course Rows:", newCsrIds, newCrsNames, newCrsProfs, newCrsPrices)
-
     dbRec()
-    for i in range(len(newCrsNames)):
-        print("I is : {}".format(i))
-        dbcursor = db.cursor()
-        sql = ("SELECT cur_name FROM curso WHERE cur_name=%s")
-        db.ping(reconnect=True)
-        dbcursor.execute(sql, (newCrsNames[i],))
-        chkCrsEx = dbcursor.fetchone()
-        print(Back.RED + "CHECKING DUPLICATE : " + str(chkCrsEx))
-        if (chkCrsEx != None and chkCrsEx[0] == newCrsNames[i]):
-            newCrsNames.remove(newCrsNames[i])
-            print ("DUPLICATE REMOVED : " + str(newCrsNames) + Style.RESET_ALL)
-            dbcursor.close()
-            if (len(newCrsNames) <= 0):
-                return redirect("/coursMList")
-        else:
-            dbcursor.close()
-            
-    dbcursor = db.cursor()
-    for i in range(len(newCrsNames)):
-        if (newCrsNames[i] != None and newCrsNames[i] != ''):
-            print(Back.CYAN + "LOOP : " + name + Style.RESET_ALL)
-            # Take out extra spaces accidentaly typed
-            name = name.strip()
-            nameB = name.replace(' ', '_')
+    dbcursor = db.cursor(buffered=True)
+    dataFrm = request.form['FRMdata']
+    dataFrm = dataFrm[1:-1]
+    dataFrm = dataFrm.replace('"','').replace("'",'').replace('','').replace('[','').replace(']', '')
+    dataFrm = dataFrm.split(',')
+    dataFrm = tuple(dataFrm)
+    dataArr = list(map(methodcaller('split', ' /'), dataFrm))
 
-            print("VALUES: \ni : {}  \nID : {} \nNAME : {} \nPROF : {} \nPRICE : {}".format(i ,newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]))
+    sql = "SELECT `cur_name` FROM `curso`"
+    dbcursor.execute(sql)
+    curL = dbcursor.fetchall()
+    curL = list(map(str, curL))
+    for i, nm in enumerate(curL):
+        print(i)
+        curL[i] = nm.replace('(', '').replace(')', '').replace(',', '').replace("'", '')
+
+    storenmb = []
+    count = 0
+    for i, entry in enumerate(dataArr):
+        if (entry[1] in curL):
+            count += 1
+            storenmb.append(i)
+        elif (len(dataArr) < 1):
+            return redirect("/coursMList")
+        else:
+            if count > 0:
+                for i in range(0, count):
+                    entry[0] = str(int(entry[0]) - 1)    
+            dataArr[i] = tuple(dataArr[i])
             
-            db.ping(reconnect=True)
-            args = [newCsrIds[i], newCrsNames[i], newCrsProfs[i], newCrsPrices[i]]
-            sql = ("INSERT INTO `curso` (`curs_id`, `cur_name`, `prof`, `curs_price`) VALUES(%s, %s, %s, %s)")
-            dbcursor.executemany(sql, (args,))
-            db.commit()
-            
-    """
-    try:
-            
-                    
-            else:
-                print("Catch_ERROR[crsCreate]: {} already is registered as a course".format(name))
-    except Exception as e:
-        db.ping(reconnect=True)
-        print(Back.YELLOW + 'coursMCREATE EXCEPTION : {}'.format(e))
-        print("coursMCREATE commit failure attempting reconnection." + Style.RESET_ALL)
-        """
-    dbcursor.close()
+
+    for i in sorted(storenmb, reverse=True):
+        del dataArr[i]
+
+    sql = "INSERT INTO `curso` (`curs_id`, `cur_name`, `prof`, `curs_price`) VALUES(%s, %s, %s, %s)"
+    dbcursor.executemany(sql, dataArr)
+    db.commit()
+
+    for i, entry in enumerate(dataArr):
+        name = entry[1].strip()
+        nameB = name.replace(' ', '_')
+
+        checkF = os.path.isdir('templates/cursos/curpages/{}'.format(nameB))
+        checkF1 = os.path.isdir('static/assets/upload/cursos/{}'.format(nameB))
+
+        if (checkF == False):
+            os.mkdir('templates/cursos/curpages/{}'.format(nameB))
+            file = open('templates/cursos/curpages/{}/{}.html'.format(nameB, nameB), 'x')
+            file.write(dynamicHTMLS.exHtml)
+        if (checkF1 == False):
+            os.mkdir('static/assets/upload/cursos/{}'.format(nameB))
+
+    
+
     return redirect("/coursMList")
 
 
@@ -466,15 +417,29 @@ def coursMCreate():
 @loginRequired
 @isAdminPage
 def deleteCourse():
+    # what kind of black magic is going on here
     dbRec()
     dbcursor = db.cursor()
     id = request.form.get("id")
+    print("The course id is : ".format(id)) # why is the value null and why does it work
 
     dbcursor.execute("SELECT * FROM classes WHERE a_curs_id=%s", (id,))
     clsEX = dbcursor.fetchone()
 
+    print(clsEX)
+
     dbcursor.execute("DELETE FROM classes WHERE a_curs_id=%s", (id,))
     db.commit()
+
+    con = sqlite3.connect(classdb)
+    concur = con.cursor()
+
+
+    sql = "DELETE FROM class WHERE cID=?"
+    concur.execute(sql, id)
+
+    concur.close()
+    con.close()
 
     dbcursor.execute("SELECT cur_name FROM curso WHERE curs_id = %s", (id,))
     curNM = dbcursor.fetchone()
@@ -509,7 +474,7 @@ def deleteCourse():
 @loginRequired
 def coursePgRdr(course, clss:1):
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     if session["isAdmin"] == False:
         dbcursor.execute("SELECT * FROM curso_check WHERE cc_curs_id=%s AND cc_usr_id=%s", (course, session["usr_id"]))
         chkU = dbcursor.fetchone()
@@ -540,18 +505,28 @@ def coursePgRdr(course, clss:1):
         if (len(clssCNT) > 0):
             clssCNT = clssCNT[0]
 
-            module_name = "static.assets.upload.cursos.{}.{}".format(crsNameB, crsNameB)
-            objname = 'Mclass_{}'.format(clssCNT[0])
+            con = sqlite3.connect("static/assets/upload/cursos/classL.db")
+            concur = con.cursor()
 
-            module = from_module_get(module_name, objname)
-
-            fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, module.doc)
-
+            sql = "SELECT * FROM class WHERE cID=? AND aID=?"
+            concur.execute(sql, [clssCNT[5], clssCNT[2]])
+            myclss = concur.fetchone()
             
-            if (module.file == True):
-                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, fPath=fPath, noClasses=False)
+            concur.close()
+            con.close()
+
+            fName = myclss[4]
+
+            fPath = '/static/assets/upload/cursos/{}/{}'.format(crsNameB, fName)
+            fCheck = True
+
+            if myclss[2] == 0:
+                fCheck = False
+            
+            if (fCheck == True):
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=fCheck, cPath=myclss[3], fPath=fPath, noClasses=False)
             else:
-                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=module.file, cPath=module.content, noClasses=False)
+                return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName, aulas=aulas, course=course, clss=clss, isFile=fCheck, cPath=myclss[3], noClasses=False)
         else:
             return render_template("/cursos/curpages/{}/{}.html".format(crsNameB, crsNameB), crsName=crsName,isFile=False, aulas=aulas, course=course, noClasses=True)
     else:
@@ -565,7 +540,7 @@ def coursePgRdr(course, clss:1):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     if request.method == "POST":
         # Variables for making it easier to type
         f_password = request.form.get("password")
@@ -632,7 +607,7 @@ def login():
 @isAdminPage
 def usrMList():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     dbcursor.execute("SELECT * FROM user")
     alunos = dbcursor.fetchall()
     dbcursor.execute("SELECT COUNT(*) FROM user")
@@ -659,7 +634,7 @@ def aUsrReg():
     print("New Course Rows: ", newUsrNames)
 
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     db.autocommit = False
     try:
         for i, ids in enumerate(newUsrIds):
@@ -705,7 +680,7 @@ def aUsrReg():
 @isAdminPage
 def usrCRSreg():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     id = request.form.get('id').split(',')
     detN = request.form['detNmb']
     if int(detN) == 1:
@@ -755,7 +730,7 @@ def usrCRSreg():
 @isAdminPage
 def deleteUser():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     detN = int(request.form['detNmb'])
     if detN == 0:
         id = request.form.get("id")
@@ -782,7 +757,7 @@ def deleteUser():
             db.commit()
             dbcursor.execute("DELETE FROM user WHERE usr_id = %s", (( number,)))
             db.commit()
-        if session["usr_id"] in idray:
+        if int(session["usr_id"]) in idray:
             session.clear()
         else:
             print("session is not in idray")
@@ -809,7 +784,7 @@ def deleteUser():
 @loginRequired
 def sndLogoutRq(id, detnmb = False):
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     if detnmb == False:
         for i, ids in enumerate(id):
             if session["usr_id"] == ids:
@@ -828,7 +803,7 @@ def sndLogoutRq(id, detnmb = False):
 @isAdminPage
 def AuserMEdit():
     dbRec()
-    dbcursor = db.cursor()
+    dbcursor = db.cursor(buffered=True)
     CsrIds = request.form.get("id")
     newCrsNames = request.form['name']
     newCrsEmail = request.form['email']
@@ -861,7 +836,7 @@ def AuserMEdit():
 @app.route("/register", methods=["GET", "POST"])
 def register():   
     dbRec()
-    dbcursor = db.cursor() 
+    dbcursor = db.cursor(buffered=True) 
     if request.method == "POST":
         dbcursor.execute("SELECT COUNT(usr_id) FROM user")
         uCnt = dbcursor.fetchone()
